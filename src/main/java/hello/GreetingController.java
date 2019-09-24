@@ -19,7 +19,7 @@ public class GreetingController {
     @ResponseBody
     @GetMapping("/test")
     public String test() {
-        return "greeting";
+        return "Hi Heidi, I received your request, here is me respons :)";
     }
 
 }
