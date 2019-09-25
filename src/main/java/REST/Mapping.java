@@ -12,31 +12,23 @@ import org.springframework.web.bind.annotation.*;
 @Controller
 public class Mapping {
 
-    DB db;
-
-    public Mapping(){
-        db = new DB();
-    }
+    DB db = new DB();
 
     @ResponseBody
     @GetMapping("/get")
     public JSONArray get() {
-
         return db.selectAll();
-    }
-
-    @GetMapping("/test")
-    public String test() {
-        return "test";
     }
 
     @ResponseBody
     @RequestMapping(value = "/post", method = RequestMethod.POST, consumes = "text/plain")
     public void post(@RequestBody String json) throws ParseException {
-        JSONObject jsonObject = (JSONObject) new JSONParser().parse(json);
+        JSONParser jsonParser = new JSONParser();
+
+        JSONObject jsonObject = (JSONObject) jsonParser.parse(json);
         jsonObject.put("device", "Apple Iphone 4");
         jsonObject.put("time", DateTime.now());
-        
+
         db.insert(jsonObject);
     }
 }
