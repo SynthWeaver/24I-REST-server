@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>test</title>
+    <script
+            src="https://code.jquery.com/jquery-3.4.1.min.js"
+            integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+            crossorigin="anonymous">
+    </script>
+</head>
+<body>
+    <img src="/img/smiley1.PNG" height="19">
+    <img src="/img/smiley2.PNG" height="19">
+    <img src="/img/smiley3.PNG" height="19">
+    <img src="/img/smiley4.PNG" height="19">
+    <img src="/img/smiley5.PNG" height="19"><br>
+    <input type="radio" name="smiley" value="1" checked>
+    <input type="radio" name="smiley" value="2" >
+    <input type="radio" name="smiley" value="3" >
+    <input type="radio" name="smiley" value="4" >
+    <input type="radio" name="smiley" value="5" ><br>
+    <input type="text" name="feedback" /><br>
+    <button id="button">
+        Submit feedback
+    </button>
+    <script>
+        $( "#button" ).click(function() {
+            $smiley = $("input[name='smiley']:checked").val();
+            $feedback = $("[name='feedback']").val();
+            $device = "Apple Iphone 4";
+            console.log($smiley + $feedback + $device);
+
+            $.post( "/post", { smiley: $smiley, feedback: $feedback, device: $device } );
+        });
+    </script>
+</body>
+</html>
