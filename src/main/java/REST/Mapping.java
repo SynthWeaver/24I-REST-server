@@ -2,6 +2,7 @@ package REST;
 
 import database.DB;
 import objects.DateTime;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,7 +19,7 @@ public class Mapping {
 
     @ResponseBody
     @GetMapping("/test")
-    public String test() {
+    public JSONArray test() {
 
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("smiley", 1);
@@ -28,7 +29,7 @@ public class Mapping {
 
         db.insert(jsonObject);
 
-        return "Hi Heidi, I received your request, here is my response :)";
+        return db.selectAll();
     }
 
 }
