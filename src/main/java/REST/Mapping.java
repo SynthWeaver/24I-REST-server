@@ -25,14 +25,6 @@ public class Mapping {
     @GetMapping("/get")
     public JSONArray get() {
 
-        JSONObject jsonObject = new JSONObject();
-        jsonObject.put("smiley", 1);
-        jsonObject.put("feedback", "This is feedback");
-        jsonObject.put("device", "Apple Iphone 4");
-        jsonObject.put("time", DateTime.now());
-
-        db.insert(jsonObject);
-
         return db.selectAll();
     }
 

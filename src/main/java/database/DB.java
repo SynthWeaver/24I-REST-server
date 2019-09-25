@@ -22,6 +22,7 @@ public class DB {
         try (FileWriter file = new FileWriter("DB.json")) {
             file.write(jsonArray.toJSONString());
             file.flush();
+            System.out.println("Added");
         } catch (IOException e) {
             e.printStackTrace();
         }
