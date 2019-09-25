@@ -6,6 +6,8 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 @Controller
@@ -18,8 +20,8 @@ public class Mapping {
     }
 
     @ResponseBody
-    @GetMapping("/test")
-    public JSONArray test() {
+    @GetMapping("/get")
+    public JSONArray get() {
 
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("smiley", 1);
@@ -30,6 +32,12 @@ public class Mapping {
         db.insert(jsonObject);
 
         return db.selectAll();
+    }
+
+    @PostMapping("/post")
+    public void JSONArray post() {
+
+        System.out.println("Yay");
     }
 
 }
