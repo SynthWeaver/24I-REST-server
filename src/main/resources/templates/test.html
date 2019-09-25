@@ -30,7 +30,11 @@
             $device = "Apple Iphone 4";
             console.log($smiley + $feedback + $device);
 
-            $.post( "/post", { smiley: $smiley, feedback: $feedback, device: $device } );
+            $json = jQuery.parseJSON( '{ "smiley":"' + $smiley + '","feedback":"' + $feedback + '","device":"' + $device + '"}' );
+
+            console.log($json)
+
+            $.post( "/post",  $json );
         });
     </script>
 </body>

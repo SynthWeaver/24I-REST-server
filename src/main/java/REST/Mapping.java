@@ -47,8 +47,14 @@ public class Mapping {
         String smiley = request.getParameter("smiley");
         String feedback = request.getParameter("feedback");
         String device = request.getParameter("device");
-        System.out.println("Smiley: " + smiley + "\nFeedback: " + feedback + "\nDevice: " + device);
 
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("smiley", smiley);
+        jsonObject.put("feedback", feedback);
+        jsonObject.put("device", device);
+        jsonObject.put("time", DateTime.now());
+
+        db.insert(jsonObject);
     }
 
 }
