@@ -36,7 +36,7 @@ public class DB {
 
     public JSONArray selectAll() throws SQLException {
         open();
-        rs = stmt.executeQuery("SELECT * FROM entry");
+        rs = stmt.executeQuery("SELECT * FROM feedback");
 
         // Fetch each row from the result set
         JSONArray jsonArray = new JSONArray();
@@ -44,9 +44,11 @@ public class DB {
             JSONObject jsonObject = new JSONObject();
             jsonObject.put("id", rs.getInt("id"));
             jsonObject.put("smiley", rs.getInt("smiley"));
-            jsonObject.put("feedback", rs.getString("comment"));
+            jsonObject.put("feedback", rs.getString("feedback"));
             jsonObject.put("time", rs.getString("time"));
             jsonObject.put("device", rs.getString("device"));
+            jsonObject.put("os", rs.getString("os"));
+            jsonObject.put("image", rs.getString("image"));
 
             jsonArray.add(jsonObject);
         }
