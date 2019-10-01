@@ -9,6 +9,8 @@ import org.json.simple.parser.ParseException;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import java.sql.SQLException;
+
 @Controller
 public class Mapping {
 
@@ -16,7 +18,7 @@ public class Mapping {
 
     @ResponseBody
     @GetMapping("/get")
-    public JSONArray get() {
+    public String get() throws SQLException {
         return db.selectAll();
     }
 
@@ -29,6 +31,6 @@ public class Mapping {
         jsonObject.put("device", "Apple Iphone 4");
         jsonObject.put("time", DateTime.now());
 
-        db.insert(jsonObject);
+       // db.insert(jsonObject);
     }
 }

@@ -24,9 +24,9 @@ public class DB {
     public DB(){
         dataSource.setServerName("localhost");
         dataSource.setPortNumber(3306);
-        dataSource.setDatabaseName("BORAJI");
+        dataSource.setDatabaseName("feedbacks");
         dataSource.setUser("root");
-        dataSource.setPassword("admin");
+        dataSource.setPassword("Team24iDB");
     }
 
     private void open() throws SQLException {
