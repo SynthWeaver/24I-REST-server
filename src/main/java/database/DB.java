@@ -22,9 +22,11 @@ public class DB {
     ResultSet rs;
 
     public DB(){
+        dataSource.setServerName("localhost");
+        dataSource.setPortNumber(3306);
+        dataSource.setDatabaseName("BORAJI");
         dataSource.setUser("root");
-        dataSource.setPassword("my24I");
-        dataSource.setServerName("myDBHost.example.org");
+        dataSource.setPassword("admin");
     }
 
     private void open() throws SQLException {
@@ -47,7 +49,7 @@ public class DB {
         return result;
     }
 
-    
+
 
 
 }
