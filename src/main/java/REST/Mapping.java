@@ -18,7 +18,7 @@ public class Mapping {
 
     @ResponseBody
     @GetMapping("/get")
-    public String get() throws SQLException {
+    public JSONArray get() throws SQLException {
         return db.selectAll();
     }
 

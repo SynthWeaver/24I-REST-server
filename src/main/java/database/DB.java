@@ -3,12 +3,6 @@ package database;
 import com.mysql.cj.jdbc.MysqlDataSource;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
-
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -40,13 +34,24 @@ public class DB {
         conn.close();
     }
 
-    public String selectAll() throws SQLException {
+    public JSONArray selectAll() throws SQLException {
         open();
-        String query = "SELECT * FROM entry";
-        rs = stmt.executeQuery(query);
-        String result = rs.toString();
+        rs = stmt.executeQuery("SELECT * FROM entry");
+
+        // Fetch each row from the result set
+        JSONArray jsonArray = new JSONArray();
+        while (rs.next()) {
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("id", rs.getInt("id"));
+            jsonObject.put("smiley", rs.getInt("smiley"));
+            jsonObject.put("feedback", rs.getString("comment"));
+            jsonObject.put("time", rs.getString("time"));
+            jsonObject.put("device", rs.getString("device"));
+
+            jsonArray.add(jsonObject);
+        }
         close();
-        return result;
+        return jsonArray;
     }
 
 
