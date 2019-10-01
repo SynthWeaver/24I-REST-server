@@ -26,11 +26,7 @@ public class Mapping {
     @RequestMapping(value = "/post", method = RequestMethod.POST, consumes = "text/plain")
     public void post(@RequestBody String json) throws ParseException, SQLException {
         JSONParser jsonParser = new JSONParser();
-
         JSONObject jsonObject = (JSONObject) jsonParser.parse(json);
-        jsonObject.put("device", "Apple Iphone 4");
-        jsonObject.put("time", DateTime.now());
-
        db.insert(jsonObject);
     }
 }

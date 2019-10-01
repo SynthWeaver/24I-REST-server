@@ -19,7 +19,8 @@ public class DB {
 
     public DB(){
         dataSource.setURL(
-                "jdbc:mysql://localhost/feedbacks?serverTimezone=TimeZone&useLegacyDatetimeCode=false"
+                "jdbc:mysql://localhost/feedbacks?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC"
+                //"jdbc:mysql://localhost/feedbacks?serverTimezone=TimeZone&useLegacyDatetimeCode=false"
         );
         dataSource.setUser("root");
         dataSource.setPassword("Team24iDB");
@@ -38,7 +39,7 @@ public class DB {
 
     public JSONArray selectAll() throws SQLException {
         open();
-        rs = stmt.executeQuery("SELECT * FROM entry");
+        rs = stmt.executeQuery("SELECT * FROM feedback");
 
         // Fetch each row from the result set
         JSONArray jsonArray = new JSONArray();
