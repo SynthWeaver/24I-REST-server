@@ -1,8 +1,10 @@
 package database;
 
 import com.mysql.cj.jdbc.MysqlDataSource;
+import objects.DateTime;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -57,6 +59,24 @@ public class DB {
     }
 
 
+    public void insert(JSONObject jsonObject) throws SQLException {
+        open();
+
+        String smiley = jsonObject.get("smiley").toString();
+        String feedback = jsonObject.get("feedback").toString();
+        String time = DateTime.now();
+        String device ="Iphone 4";
+        String os = "Apple";
 
 
+        String query = String.format("INSERT INTO feedbacks.feedback" +
+                "(smiley,feedback,time,device,os)" +
+                "VALUES" +
+                "(%s, '%s','%s','%s','%s');",
+                smiley, feedback, time, device, os
+                );
+
+        rs = stmt.executeQuery(query);
+        close();
+    }
 }
