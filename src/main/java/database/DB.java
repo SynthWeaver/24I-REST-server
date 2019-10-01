@@ -22,9 +22,9 @@ public class DB {
     ResultSet rs;
 
     public DB(){
-        dataSource.setServerName("localhost");
-        dataSource.setPortNumber(3306);
-        dataSource.setDatabaseName("feedbacks");
+        dataSource.setURL(
+                "jdbc:mysql://localhost/feedbacks?serverTimezone=TimeZone&useLegacyDatetimeCode=false"
+        );
         dataSource.setUser("root");
         dataSource.setPassword("Team24iDB");
     }
