@@ -20,7 +20,6 @@ public class DB {
     public DB(){
         dataSource.setURL(
                 "jdbc:mysql://localhost/feedbacks?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC"
-                //"jdbc:mysql://localhost/feedbacks?serverTimezone=TimeZone&useLegacyDatetimeCode=false"
         );
         dataSource.setUser("root");
         dataSource.setPassword("Team24iDB");
