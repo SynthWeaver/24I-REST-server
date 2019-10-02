@@ -13,9 +13,9 @@ import java.sql.Statement;
 public class DB {
 
     private MysqlDataSource dataSource = new MysqlDataSource();
-    private Connection conn;
+    private Connection conn ;
     private Statement stmt;
-    ResultSet rs;
+    ResultSet rs ;
 
     public DB(){
         dataSource.setURL(
@@ -29,6 +29,10 @@ public class DB {
     private void open() throws SQLException {
         conn = dataSource.getConnection();
         stmt = conn.createStatement();
+
+        //set a result set or you cant close it later
+        rs = stmt.executeQuery("SELECT * FROM feedback WHERE id=-1");
+        rs.close();
     }
 
     private void close() throws SQLException {
@@ -60,26 +64,25 @@ public class DB {
         return jsonArray;
     }
 
-
     public void insert(JSONObject jsonObject) throws SQLException {
         open();
 
         String smiley = jsonObject.get("smiley").toString();
         String feedback = jsonObject.get("feedback").toString();
         String time = DateTime.now();
-        String device ="Iphone 4";
-        String os = "Apple";
-        String app = "App";
-
+        String device = jsonObject.get("device").toString();
+        String os = jsonObject.get("os").toString();
+        String app = jsonObject.get("app").toString();
+        String image = jsonObject.get("image").toString();
 
         String query = String.format("INSERT INTO feedbacks.feedback" +
-                "(smiley,feedback,time,device,os,app)" +
+                "(smiley,feedback,time,device,os,app,image)" +
                 "VALUES" +
-                "(%s, '%s','%s','%s','%s','%s');",
-                smiley, feedback, time, device, os
+                "(%s, '%s','%s','%s','%s','%s','%s');",
+                smiley, feedback, time, device, os, app, image
                 );
 
-        rs = stmt.executeQuery(query);
+        stmt.executeUpdate(query);
         close();
     }
 }
