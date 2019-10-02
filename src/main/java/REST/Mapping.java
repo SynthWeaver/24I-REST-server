@@ -1,7 +1,6 @@
 package REST;
 
 import database.DB;
-import objects.DateTime;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -25,7 +24,7 @@ public class Mapping {
         if (passphrase.equals(password)){
             return db.selectAll();
         } else {
-            return null;
+            throw new SQLException();
         }
     }
 
