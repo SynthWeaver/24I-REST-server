@@ -7,6 +7,7 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.view.RedirectView;
 
 import javax.servlet.http.HttpServletRequest;
 import java.sql.SQLException;
@@ -19,12 +20,24 @@ public class Mapping {
 
     @ResponseBody
     @GetMapping("/get")
-    public JSONArray get(HttpServletRequest request) throws SQLException {
+    public RedirectView get(HttpServletRequest request){
+        String password = request.getParameter("pw");
+        if (passphrase.equals(password)){
+            return new RedirectView("/getFB?pw=Team24i");
+        } else {
+            return new RedirectView("/pagenotfound");
+        }
+    }
+
+    @ResponseBody
+    @GetMapping("/getFB")
+    public JSONArray getFB(HttpServletRequest request) throws SQLException, Exception {
         String password = request.getParameter("pw");
         if (passphrase.equals(password)){
             return db.selectAll();
-        } else {
-            throw new SQLException();
+        }
+        else {
+            throw new Exception();
         }
     }
 
