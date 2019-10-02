@@ -9,17 +9,24 @@ import org.json.simple.parser.ParseException;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import java.sql.SQLException;
 
 @Controller
 public class Mapping {
 
     DB db = new DB();
+    String passphrase = "Team24i";
 
     @ResponseBody
     @GetMapping("/get")
-    public JSONArray get() throws SQLException {
-        return db.selectAll();
+    public JSONArray get(HttpServletRequest request) throws SQLException {
+        String password = request.getParameter("pw");
+        if (passphrase.equals(password)){
+            return db.selectAll();
+        } else {
+            return null;
+        }
     }
 
     @ResponseBody

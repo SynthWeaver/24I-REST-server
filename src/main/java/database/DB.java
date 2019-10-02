@@ -51,6 +51,7 @@ public class DB {
             jsonObject.put("time", rs.getString("time"));
             jsonObject.put("device", rs.getString("device"));
             jsonObject.put("os", rs.getString("os"));
+            jsonObject.put("app", rs.getString("app"));
             jsonObject.put("image", rs.getString("image"));
 
             jsonArray.add(jsonObject);
@@ -68,12 +69,13 @@ public class DB {
         String time = DateTime.now();
         String device ="Iphone 4";
         String os = "Apple";
+        String app = "App";
 
 
         String query = String.format("INSERT INTO feedbacks.feedback" +
-                "(smiley,feedback,time,device,os)" +
+                "(smiley,feedback,time,device,os,app)" +
                 "VALUES" +
-                "(%s, '%s','%s','%s','%s');",
+                "(%s, '%s','%s','%s','%s','%s');",
                 smiley, feedback, time, device, os
                 );
 
