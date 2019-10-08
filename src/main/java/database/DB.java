@@ -63,6 +63,29 @@ public class DB {
         return jsonArray;
     }
 
+    public JSONArray sortBy() throws SQLException {
+        open();
+        rs = stmt.executeQuery("SELECT * FROM feedback ORDER BY time");
+
+        // Fetch each row from the result set
+        JSONArray jsonArray1 = new JSONArray();
+        while (rs.next()) {
+            JSONObject jsonObject1 = new JSONObject();
+            jsonObject1.put("id", rs.getInt("id"));
+            jsonObject1.put("smiley", rs.getInt("smiley"));
+            jsonObject1.put("feedback", rs.getString("feedback"));
+            jsonObject1.put("time", rs.getString("time"));
+            jsonObject1.put("device", rs.getString("device"));
+            jsonObject1.put("os", rs.getString("os"));
+            jsonObject1.put("app", rs.getString("app"));
+            jsonObject1.put("image", rs.getString("image"));
+
+            jsonArray1.add(jsonObject1);
+        }
+        close();
+        return jsonArray1;
+    }
+
     public void insert(JSONObject jsonObject) throws SQLException {
         open();
 
@@ -85,3 +108,16 @@ public class DB {
         close();
     }
 }
+//  Sort by smiley, ascending:
+//         rs = stmt.executeQuery("SELECT * FROM feedback ORDER BY smiley");
+
+// Sort by smiley, descending:
+//        rs = stmt.executeQuery("SELECT * FROM feedback ORDER BY smiley DESC");
+
+// Oldest to newest
+//         rs = stmt.executeQuery("SELECT * FROM feedback ORDER BY time");
+
+// Newest to oldest
+//         rs = stmt.executeQuery("SELECT * FROM feedback ORDER BY time DESC");
+
+//         rs = stmt.executeQuery("SELECT * FROM feedback ORDER BY device");

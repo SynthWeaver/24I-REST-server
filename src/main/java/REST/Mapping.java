@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.view.RedirectView;
 
 import javax.servlet.http.HttpServletRequest;
+import java.sql.Date;
 import java.sql.SQLException;
 
 @Controller
@@ -40,6 +41,13 @@ public class Mapping {
         else {
             throw new Exception();
         }
+    }
+
+    @ResponseBody
+    @GetMapping("/getSortBy")
+    public JSONArray getFB() throws SQLException, Exception {
+        System.out.println(DateTime.now());
+        return db.sortBy();
     }
 
     @ResponseBody

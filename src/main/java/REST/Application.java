@@ -17,7 +17,7 @@ public class Application {
     public static void main(String[] args) {
         SpringApplication.run(Application.class, args);
 
-        System.out.println("Please go to localhost:8080");
+        System.out.println("Please go to localhost:8085");
     }
 
 }
