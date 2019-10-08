@@ -1,48 +1,61 @@
 package REST;
 
 import database.DB;
-import objects.DateTime;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.view.RedirectView;
 
-import javax.servlet.http.HttpServletRequest;
-import java.sql.Date;
 import java.sql.SQLException;
 
 @Controller
 public class Mapping {
 
     DB db = new DB();
-    String passphrase = "Team24i";
+    //String passphrase = "Team24i";
 
     @ResponseBody
     @GetMapping("/get")
-    public RedirectView get(HttpServletRequest request){
-        String password = request.getParameter("pw");
-        if (passphrase.equals(password)){
-            return new RedirectView("/getFB?pw=Team24i");
-        } else {
-            return new RedirectView("/pagenotfound");
-        }
+    public JSONArray get() throws SQLException{
+        return db.selectAll();
+    }
+
+    //@ResponseBody
+    //@GetMapping("/getFB")
+    //public JSONArray getFB(HttpServletRequest request) throws SQLException, Exception {
+    //    String password = request.getParameter("pw");
+    //    if (passphrase.equals(password)){
+    //        return db.selectAll();
+    //    }
+    //    else {
+    //        throw new Exception();
+    //    }
+    //}
+
+    @ResponseBody
+    @GetMapping("/get/linecount")
+    public JSONArray getLineCount() throws SQLException{
+        return db.feedbackCount();
     }
 
     @ResponseBody
-    @GetMapping("/getFB")
-    public JSONArray getFB(HttpServletRequest request) throws SQLException, Exception {
-        String password = request.getParameter("pw");
-        if (passphrase.equals(password)){
-            return db.selectAll();
+    @GetMapping("/get/linecount/smiley/{request}")
+    public JSONArray smileyLineCount(@PathVariable("request") String request) throws SQLException, Exception {
+        int reqTest = 0;
+        try {
+            reqTest = Integer.parseInt(request);
+        } catch(Exception e) {
+            reqTest = 0;
+        }
+        if ((reqTest >= 1 && reqTest <= 10)){
+            return db.smileyCount(request);
         }
         else {
             throw new Exception();
         }
     }
-
 
     @ResponseBody
     @RequestMapping(value = "/post", method = RequestMethod.POST, consumes = "text/plain")
@@ -52,74 +65,65 @@ public class Mapping {
        db.insert(jsonObject);
     }
 
+    // Sort by time: /get/time/asc or /get/time/desc
     @ResponseBody
-    @GetMapping("/get/time/asc")
-    public JSONArray getTimeAsc() throws SQLException, Exception {
-        return db.timeAsc();
-    }
-
-    @ResponseBody
-    @GetMapping("/get/time/desc")
-    public JSONArray getTimeDesc() throws SQLException, Exception {
-        return db.timeDesc();
-    }
-
-    @ResponseBody
-    @GetMapping("/get/smiley/asc")
-    public JSONArray smileyAsc() throws SQLException, Exception {
-        return db.smileyAsc();
-    }
-
-    @ResponseBody
-    @GetMapping("/get/smiley/desc")
-    public JSONArray smileyDesc() throws SQLException, Exception {
-        return db.smileyDesc();
-    }
-
-    @ResponseBody
-    @GetMapping("/get/device/asc")
-    public JSONArray deviceAsc() throws SQLException, Exception {
-        return db.deviceAsc();
-    }
-
-    @ResponseBody
-    @GetMapping("/get/device/desc")
-    public JSONArray deviceDesc() throws SQLException, Exception {
-        return db.deviceDesc();
-    }
-
-    @ResponseBody
-    @GetMapping("/get/smiley/1")
-    public JSONArray smiley1() throws SQLException, Exception {
-        return db.smiley1();
-    }
-
-    @ResponseBody
-    @GetMapping("/get/smiley/2")
-    public JSONArray smiley2() throws SQLException, Exception {
-        return db.smiley2();
+    @GetMapping("/get/time/{request}")
+    public JSONArray time(@PathVariable("request") String request) throws SQLException, Exception {
+        if (request.equals("asc") || request.equals("desc")) {
+            return db.time(request);
+        }
+        else {
+            throw new Exception();
+        }
     }
 
 
+
+    // Sort by device: /get/device/asc or /get/device/desc
     @ResponseBody
-    @GetMapping("/get/smiley/3")
-    public JSONArray smiley3() throws SQLException, Exception {
-        return db.smiley3();
+    @GetMapping("/get/device/{request}")
+    public JSONArray device(@PathVariable("request") String request) throws SQLException, Exception {
+        if (request.equals("asc") || request.equals("desc")) {
+            return db.device(request);
+        }
+        else {
+            throw new Exception();
+        }
     }
 
 
+    // Sort by app: /get/app/asc or /get/app/desc
     @ResponseBody
-    @GetMapping("/get/smiley/4")
-    public JSONArray smiley4() throws SQLException, Exception {
-        return db.smiley4();
+    @GetMapping("/get/app/{request}")
+    public JSONArray app(@PathVariable("request") String request) throws SQLException, Exception {
+        if (request.equals("asc") || request.equals("desc")) {
+            return db.app(request);
+        }
+        else {
+            throw new Exception();
+        }
     }
 
-    @ResponseBody
-    @GetMapping("/get/smiley/5")
-    public JSONArray smiley5() throws SQLException, Exception {
-        return db.smiley5();
-    }
 
+    // Get smileys for example with /get/smiley/1 (1-10)
+    // or sort /get/smiley/asc or /get/smiley/desc
+    @ResponseBody
+    @GetMapping("/get/smiley/{request}")
+    public JSONArray smiley(@PathVariable("request") String request) throws SQLException, Exception {
+
+        int reqTest = 0;
+        try {
+            reqTest = Integer.parseInt(request);
+        } catch(Exception e) {
+            reqTest = 0;
+        }
+        if ((reqTest >= 1 && reqTest <= 10) || request.equals("asc") || request.equals("desc")){
+            return db.smiley(request);
+        }
+        else {
+            throw new Exception();
+        }
+    }
 
 
 

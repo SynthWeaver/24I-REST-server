@@ -7,6 +7,13 @@
     <artifactId>gs-serving-web-content</artifactId>
     <version>0.1.0</version>
 
+    <repositories>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
+    </repositories>
+
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
@@ -36,6 +43,11 @@
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
             <version>8.0.17</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.TimTerwijn</groupId>
+            <artifactId>simplejava</artifactId>
+            <version>v0.1-alpha</version>
         </dependency>
     </dependencies>
 
