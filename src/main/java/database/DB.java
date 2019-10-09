@@ -51,6 +51,7 @@ public class DB {
 
         String smiley = jsonObject.get("smiley").toString();
         String feedback = jsonObject.get("feedback").toString();
+        String category = jsonObject.get("category").toString();
         String time = DateTime.now();
         String device = jsonObject.get("device").toString();
         String os = jsonObject.get("os").toString();
@@ -58,10 +59,10 @@ public class DB {
         String image = jsonObject.get("image").toString();
 
         String query = String.format("INSERT INTO feedbacks.feedback" +
-                "(smiley,feedback,time,device,os,app,image)" +
+                "(smiley,feedback,category,time,device,os,app,image)" +
                 "VALUES" +
-                "(%s, '%s','%s','%s','%s','%s','%s');",
-                smiley, feedback, time, device, os, app, image
+                "(%s,'%s','%s','%s','%s','%s','%s','%s');",
+                smiley, feedback, category, time, device, os, app, image
                 );
 
         stmt.executeUpdate(query);
@@ -188,6 +189,7 @@ public class DB {
             jsonObject.put("id", rs.getInt("id"));
             jsonObject.put("smiley", rs.getInt("smiley"));
             jsonObject.put("feedback", rs.getString("feedback"));
+            jsonObject.put("category", rs.getString("category"));
             jsonObject.put("time", rs.getString("time"));
             jsonObject.put("device", rs.getString("device"));
             jsonObject.put("os", rs.getString("os"));
