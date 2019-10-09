@@ -1,10 +1,9 @@
 package database;
 
 import com.mysql.cj.jdbc.MysqlDataSource;
-import nl.terwijn.DateTime;
+import objects.DateTime;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
-
 import java.sql.*;
 
 public class DB {
