@@ -86,6 +86,26 @@ public class DB {
         return jsonArray;
     }
 
+    // Line count of specific os
+    public JSONArray osCount(String request) throws SQLException {
+
+        open();
+
+        PreparedStatement ps = conn.prepareStatement("SELECT COUNT(*) AS lc FROM feedback WHERE os = ?");
+        ps.setString(1, request);
+        rs = ps.executeQuery();
+
+        JSONArray jsonArray = new JSONArray();
+        while (rs.next()) {
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("line count os "+request, rs.getInt("lc"));
+
+            jsonArray.add(jsonObject);
+        }
+        close();
+        return jsonArray;
+    }
+
     // Line count of desired smiley value (1-10)
     public JSONArray smileyCount(String request) throws SQLException {
         open();
