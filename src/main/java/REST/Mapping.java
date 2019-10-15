@@ -64,6 +64,12 @@ public class Mapping {
     }
 
     @ResponseBody
+    @GetMapping("/get/os2/{os1}+{os2}")
+    public JSONArray osCountTwo(@PathVariable("os1") String os1, @PathVariable("os2") String os2) throws SQLException, Exception {
+        return db.osCountTwo(os1, os2);
+    }
+
+    @ResponseBody
     @GetMapping("/get/id/{request}")
     public JSONArray theId(@PathVariable("request") String request) throws SQLException, Exception {
         return db.theId(request);

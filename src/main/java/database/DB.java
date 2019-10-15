@@ -11,7 +11,7 @@ public class DB {
     private MysqlDataSource dataSource = new MysqlDataSource();
     private Connection conn ;
     private Statement stmt;
-    ResultSet rs ;
+    ResultSet rs, rs2 ;
 
     public DB(){
         dataSource.setURL(
@@ -28,10 +28,13 @@ public class DB {
         //set a result set or you cant close it later
         rs = stmt.executeQuery("SELECT * FROM feedback WHERE id=-1");
         rs.close();
+        rs2 = stmt.executeQuery("SELECT * FROM feedback WHERE id=-1");
+        rs2.close();
     }
 
     private void close() throws SQLException {
         rs.close();
+        rs2.close();
         stmt.close();
         conn.close();
     }
@@ -98,11 +101,42 @@ public class DB {
         JSONArray jsonArray = new JSONArray();
         while (rs.next()) {
             JSONObject jsonObject = new JSONObject();
-            jsonObject.put("line count os "+request, rs.getInt("lc"));
+            jsonObject.put("line count"+request, rs.getInt("lc"));
 
             jsonArray.add(jsonObject);
         }
         close();
+        return jsonArray;
+    }
+
+    // Line count of 2 specific os's
+    public JSONArray osCountTwo(String os1, String os2) throws SQLException {
+        open();
+
+        PreparedStatement ps = conn.prepareStatement("SELECT COUNT(*) AS lc FROM feedback WHERE os = ?");
+        PreparedStatement ps2 = conn.prepareStatement("SELECT COUNT(*) AS lc2 FROM feedback WHERE os = ?");
+
+        ps.setString(1, os1);
+        ps2.setString(1, os2);
+        rs = ps.executeQuery();
+        rs2 = ps2.executeQuery();
+
+        JSONObject jsonObject = new JSONObject();
+        JSONArray jsonArray = new JSONArray();
+
+        while (rs.next()) {
+            jsonObject.put(os1, rs.getInt("lc"));
+        }
+
+        while (rs2.next()) {
+            jsonObject.put(os2, rs2.getInt("lc2"));
+        }
+
+        jsonArray.add(jsonObject);
+
+
+        close();
+        rs2.close();
         return jsonArray;
     }
 
