@@ -1,88 +1,45 @@
 package database;
 
-import com.mysql.cj.jdbc.MysqlDataSource;
-import objects.DateTime;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 
 public class DB {
 
-    private MysqlDataSource dataSource = new MysqlDataSource();
-    private Connection conn ;
-    private Statement stmt;
-    ResultSet rs ;
+    public void insert(JSONObject jsonObject){
+        //get old data
+        JSONArray jsonArray = this.selectAll();
 
-    public DB(){
-        dataSource.setURL(
-                "jdbc:mysql://localhost/feedbacks?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC"
-                //"jdbc:mysql://localhost/feedbacks?serverTimezone=TimeZone&useLegacyDatetimeCode=false"
-        );
-        dataSource.setUser("root");
-        dataSource.setPassword("Team24iDB");
-    }
+        //add new data to old data
+        jsonArray.add(jsonObject);
 
-    private void open() throws SQLException {
-        conn = dataSource.getConnection();
-        stmt = conn.createStatement();
-
-        //set a result set or you cant close it later
-        rs = stmt.executeQuery("SELECT * FROM feedback WHERE id=-1");
-        rs.close();
-    }
-
-    private void close() throws SQLException {
-        rs.close();
-        stmt.close();
-        conn.close();
-    }
-
-    public JSONArray selectAll() throws SQLException {
-        open();
-        rs = stmt.executeQuery("SELECT * FROM feedback");
-
-        // Fetch each row from the result set
-        JSONArray jsonArray = new JSONArray();
-        while (rs.next()) {
-            JSONObject jsonObject = new JSONObject();
-            jsonObject.put("id", rs.getInt("id"));
-            jsonObject.put("smiley", rs.getInt("smiley"));
-            jsonObject.put("feedback", rs.getString("feedback"));
-            jsonObject.put("time", rs.getString("time"));
-            jsonObject.put("device", rs.getString("device"));
-            jsonObject.put("os", rs.getString("os"));
-            jsonObject.put("app", rs.getString("app"));
-            jsonObject.put("image", rs.getString("image"));
-
-            jsonArray.add(jsonObject);
+        //write to local data
+        try (FileWriter file = new FileWriter("DB.json")) {
+            file.write(jsonArray.toJSONString());
+            file.flush();
+            System.out.println("Added");
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-        close();
-        return jsonArray;
     }
 
-    public void insert(JSONObject jsonObject) throws SQLException {
-        open();
+    public JSONArray selectAll(){
+        //JSON parser object to parse read file
+        JSONParser jsonParser = new JSONParser();
 
-        String smiley = jsonObject.get("smiley").toString();
-        String feedback = jsonObject.get("feedback").toString();
-        String time = DateTime.now();
-        String device = jsonObject.get("device").toString();
-        String os = jsonObject.get("os").toString();
-        String app = jsonObject.get("app").toString();
-        String image = jsonObject.get("image").toString();
-
-        String query = String.format("INSERT INTO feedbacks.feedback" +
-                "(smiley,feedback,time,device,os,app,image)" +
-                "VALUES" +
-                "(%s, '%s','%s','%s','%s','%s','%s');",
-                smiley, feedback, time, device, os, app, image
-                );
-
-        stmt.executeUpdate(query);
-        close();
+        try (FileReader reader = new FileReader("DB.json"))
+        {
+            //Read JSON file
+            return (JSONArray) jsonParser.parse(reader);
+        } catch (IOException | ParseException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
+
 }

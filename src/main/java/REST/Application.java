@@ -19,5 +19,4 @@ public class Application {
 
         System.out.println("Please go to localhost:8080");
     }
-
 }
