@@ -105,6 +105,20 @@ public class DB {
         return jsonArray;
     }
 
+    // Specific Id
+    public JSONArray theId(String request) throws SQLException {
+        open();
+
+        PreparedStatement ps = conn.prepareStatement("SELECT * FROM feedback  WHERE id = ?");
+        ps.setString(1, request);
+        rs = ps.executeQuery();
+
+        JSONArray jsonArray = printDB();
+
+        close();
+        return jsonArray;
+    }
+
     // Sort by time
     public JSONArray time(String request) throws SQLException {
         open();

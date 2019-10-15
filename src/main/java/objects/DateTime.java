@@ -8,7 +8,7 @@ public class DateTime {
     private DateTime(){}
 
     public static String now(){
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss.000");
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         Date date = new Date();
         return formatter.format(date);
     }

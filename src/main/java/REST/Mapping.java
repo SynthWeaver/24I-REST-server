@@ -57,6 +57,12 @@ public class Mapping {
         }
     }
 
+    @ResponseBody
+    @GetMapping("/get/id/{request}")
+    public JSONArray theId(@PathVariable("request") String request) throws SQLException, Exception {
+        return db.theId(request);
+
+    }
 
     // template for /post:
     // {"smiley" : 7, "feedback" : "Nice UI", "category" : "positivefeedback", "device" : "Pixel", "os" : "Android", "app" : "SomeApp", "image" : ""}
