@@ -46,7 +46,7 @@ public class DB {
         return jsonArray;
     }
 
-    // Category has to be either "bugreport", "suggestion" or "positivefeedback"
+    // Category has to be either "bugreport", "suggestion" or "feedback"
     public void insert(JSONObject jsonObject) throws SQLException {
         open();
 

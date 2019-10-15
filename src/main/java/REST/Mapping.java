@@ -65,7 +65,7 @@ public class Mapping {
     }
 
     // template for /post:
-    // {"smiley" : 7, "feedback" : "Nice UI", "category" : "positivefeedback", "device" : "Pixel", "os" : "Android", "app" : "SomeApp", "image" : ""}
+    // {"smiley" : 7, "feedback" : "Nice UI", "category" : "feedback", "device" : "Pixel", "os" : "Android", "app" : "SomeApp", "image" : ""}
     @ResponseBody
     @RequestMapping(value = "/post", method = RequestMethod.POST, consumes = "text/plain")
     public void post(@RequestBody String json) throws ParseException, SQLException {
