@@ -17,25 +17,11 @@ import java.sql.SQLException;
 public class Mapping {
 
     DB db = new DB();
-    String passphrase = "Team24i";
 
     @ResponseBody
     @GetMapping("/get")
     public JSONArray get(HttpServletRequest request) throws SQLException {
-        String password = request.getParameter("pw");
-        if (passphrase.equals(password)){
-            return db.selectAll();
-        } else {
-            throw new SQLException();
-        }
-    }
-
-    @ResponseBody
-    @RequestMapping(value = "/test", method = RequestMethod.POST, consumes = "text/plain")
-    public void post(@RequestBody String json) throws ParseException, SQLException {
-        JSONParser jsonParser = new JSONParser();
-        JSONObject jsonObject = (JSONObject) jsonParser.parse(json);
-       db.insert(jsonObject);
+        return db.selectAll();
     }
 
     @PostMapping("/post")
