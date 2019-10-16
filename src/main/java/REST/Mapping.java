@@ -1,6 +1,7 @@
 package REST;
 
 import database.DB;
+import REST.Analytics;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -14,32 +15,42 @@ import java.sql.SQLException;
 public class Mapping {
 
     DB db = new DB();
-    //String passphrase = "Team24i";
+    Analytics an = new Analytics();
 
+    //
+    // MAIN METHODS
+    //
+
+    // basic get (whole table)
     @ResponseBody
     @GetMapping("/get")
     public JSONArray get() throws SQLException{
         return db.selectAll();
     }
 
-    //@ResponseBody
-    //@GetMapping("/getFB")
-    //public JSONArray getFB(HttpServletRequest request) throws SQLException, Exception {
-    //    String password = request.getParameter("pw");
-    //    if (passphrase.equals(password)){
-    //        return db.selectAll();
-    //    }
-    //    else {
-    //        throw new Exception();
-    //    }
-    //}
+    // template for /post:
+    // {"smiley" : 7, "feedback" : "Nice UI", "category" : "feedback", "device" : "Pixel", "os" : "Android", "app" : "SomeApp", "image" : ""}
+    @ResponseBody
+    @RequestMapping(value = "/post", method = RequestMethod.POST, consumes = "text/plain")
+    public void post(@RequestBody String json) throws ParseException, SQLException {
+        JSONParser jsonParser = new JSONParser();
+        JSONObject jsonObject = (JSONObject) jsonParser.parse(json);
+        db.insert(jsonObject);
+    }
 
+
+    //
+    // OTHER QUERIES
+    //
+
+    //linecount; how many feedbacks
     @ResponseBody
     @GetMapping("/get/linecount")
     public JSONArray getLineCount() throws SQLException{
         return db.feedbackCount();
     }
 
+    //how many smileys of a specific value
     @ResponseBody
     @GetMapping("/get/linecount/smiley/{request}")
     public JSONArray smileyLineCount(@PathVariable("request") String request) throws SQLException, Exception {
@@ -57,33 +68,26 @@ public class Mapping {
         }
     }
 
+    //only feedback from a specific os
     @ResponseBody
     @GetMapping("/get/os/{request}")
     public JSONArray osCount(@PathVariable("request") String request) throws SQLException, Exception {
             return db.osCount(request);
     }
 
+    // only feedbacks from 2 specific os
     @ResponseBody
     @GetMapping("/get/os2/{os1}+{os2}")
     public JSONArray osCountTwo(@PathVariable("os1") String os1, @PathVariable("os2") String os2) throws SQLException, Exception {
         return db.osCountTwo(os1, os2);
     }
 
+    // only feedback with a specific id
     @ResponseBody
     @GetMapping("/get/id/{request}")
     public JSONArray theId(@PathVariable("request") String request) throws SQLException, Exception {
         return db.theId(request);
 
-    }
-
-    // template for /post:
-    // {"smiley" : 7, "feedback" : "Nice UI", "category" : "feedback", "device" : "Pixel", "os" : "Android", "app" : "SomeApp", "image" : ""}
-    @ResponseBody
-    @RequestMapping(value = "/post", method = RequestMethod.POST, consumes = "text/plain")
-    public void post(@RequestBody String json) throws ParseException, SQLException {
-        JSONParser jsonParser = new JSONParser();
-        JSONObject jsonObject = (JSONObject) jsonParser.parse(json);
-       db.insert(jsonObject);
     }
 
     // Sort by time: /get/time/asc or /get/time/desc
@@ -98,8 +102,6 @@ public class Mapping {
         }
     }
 
-
-
     // Sort by device: /get/device/asc or /get/device/desc
     @ResponseBody
     @GetMapping("/get/device/{request}")
@@ -112,7 +114,6 @@ public class Mapping {
         }
     }
 
-
     // Sort by app: /get/app/asc or /get/app/desc
     @ResponseBody
     @GetMapping("/get/app/{request}")
@@ -124,7 +125,6 @@ public class Mapping {
             throw new Exception();
         }
     }
-
 
     // Get smileys for example with /get/smiley/1 (1-10)
     // or sort /get/smiley/asc or /get/smiley/desc
@@ -146,8 +146,12 @@ public class Mapping {
         }
     }
 
-
-
+    // analyzed data for dashboard app
+    @ResponseBody
+    @GetMapping("/getAnData")
+    public JSONArray getAnData() throws SQLException{
+        return an.analyzeData();
+    }
 
 
 }

@@ -13,6 +13,11 @@ public class DB {
     private Statement stmt;
     ResultSet rs, rs2 ;
 
+
+    //
+    // METHODS FOR COMMUNICATING WITH THE DATABASE
+    //
+
     public DB(){
         dataSource.setURL(
                 "jdbc:mysql://localhost/feedbacks?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC"
@@ -39,6 +44,11 @@ public class DB {
         conn.close();
     }
 
+    //
+    // MAIN QUERIES
+    //
+
+    // basic select all
     public JSONArray selectAll() throws SQLException {
         open();
         rs = stmt.executeQuery("SELECT * FROM feedback");
@@ -49,7 +59,8 @@ public class DB {
         return jsonArray;
     }
 
-    // Category has to be either "bugreport", "suggestion" or "feedback"
+    // For POST method
+    // (Category should be either "bugreport", "suggestion" or "feedback")
     public void insert(JSONObject jsonObject) throws SQLException {
         open();
 
@@ -72,6 +83,30 @@ public class DB {
         stmt.executeUpdate(query);
         close();
     }
+
+    // (to be used by the queries)
+    private JSONArray printDB() throws SQLException{
+        JSONArray jsonArray = new JSONArray();
+        while (rs.next()) {
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("id", rs.getInt("id"));
+            jsonObject.put("smiley", rs.getInt("smiley"));
+            jsonObject.put("feedback", rs.getString("feedback"));
+            jsonObject.put("category", rs.getString("category"));
+            jsonObject.put("time", rs.getString("time"));
+            jsonObject.put("device", rs.getString("device"));
+            jsonObject.put("os", rs.getString("os"));
+            jsonObject.put("app", rs.getString("app"));
+            jsonObject.put("image", rs.getString("image"));
+
+            jsonArray.add(jsonObject);
+        }
+        return jsonArray;
+    }
+
+    //
+    // OTHER QUERIES
+    //
 
     // Line count of whole database
     public JSONArray feedbackCount() throws SQLException {
@@ -127,16 +162,13 @@ public class DB {
         while (rs.next()) {
             jsonObject.put(os1, rs.getInt("lc"));
         }
-
         while (rs2.next()) {
             jsonObject.put(os2, rs2.getInt("lc2"));
         }
 
         jsonArray.add(jsonObject);
 
-
         close();
-        rs2.close();
         return jsonArray;
     }
 
@@ -251,22 +283,33 @@ public class DB {
             return jsonArray;
         }
     }
-    private JSONArray printDB() throws SQLException{
+
+    //
+    // These two queries are being used by Analytics.java
+    //
+
+    // total line count as integer
+    public int lineCount() throws SQLException {
+
+        int linecount = 0;
+        open();
+        rs = stmt.executeQuery("SELECT COUNT(*) AS lc FROM feedback");
+        while (rs.next()) {
+            linecount = rs.getInt("lc");
+        }
+        close();
+        return linecount;
+    }
+
+    // Only feedback column for analysis purposes
+    public JSONArray onlyFB() throws SQLException {
+        open();
+        rs = stmt.executeQuery("SELECT feedback FROM feedback");
         JSONArray jsonArray = new JSONArray();
         while (rs.next()) {
-            JSONObject jsonObject = new JSONObject();
-            jsonObject.put("id", rs.getInt("id"));
-            jsonObject.put("smiley", rs.getInt("smiley"));
-            jsonObject.put("feedback", rs.getString("feedback"));
-            jsonObject.put("category", rs.getString("category"));
-            jsonObject.put("time", rs.getString("time"));
-            jsonObject.put("device", rs.getString("device"));
-            jsonObject.put("os", rs.getString("os"));
-            jsonObject.put("app", rs.getString("app"));
-            jsonObject.put("image", rs.getString("image"));
-
-            jsonArray.add(jsonObject);
+            jsonArray.add(rs.getString("feedback"));
         }
         return jsonArray;
     }
+
 }
