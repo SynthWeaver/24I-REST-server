@@ -30,6 +30,19 @@ CREATE TABLE IF NOT EXISTS `feedbacks`.`feedback` (
   `app` VARCHAR(50) NULL DEFAULT NULL,
   `image` VARCHAR(500) NULL DEFAULT NULL,
   PRIMARY KEY (`id`))
+
+  CREATE TABLE IF NOT EXISTS `feedbacks`.`apps` (
+    `id` INT NOT NULL AUTO_INCREMENT,
+    `appName` VARCHAR(50) NOT NULL UNIQUE,
+    `logoURL` VARCHAR(500) NOT NULL,
+    PRIMARY KEY (`id`));
+
+    INSERT IGNORE INTO feedbacks.apps (appName, logoURL) VALUES ("Videoland", "https://lh3.googleusercontent.com/9rwyG6MORZddxe07mVddszcTt0vRnV0Rxijk1mQtNdN7pY2LUJhDIXJroDpROn76c7kN");
+    INSERT IGNORE INTO feedbacks.apps (appName, logoURL) VALUES ("NPO Start", "https://is4-ssl.mzstatic.com/image/thumb/Purple123/v4/da/9b/e6/da9be644-0138-9889-6502-e8379641fbe0/AppIcon-0-1x_U007emarketing-0-0-85-220-0-7.png/246x0w.jpg");
+    INSERT IGNORE INTO feedbacks.apps (appName, logoURL) VALUES ("Pathe Thuis", "https://images-eds-ssl.xboxlive.com/image?url=8Oaj9Ryq1G1_p3lLnXlsaZgGzAie6Mnu24_PawYuDYIoH77pJ.X5Z.MqQPibUVTcT9CDoAI0Al.KRGh5tQle3A_QQ2kWJswmpQuhPwsf6BkwTt0e09NugN3mRxDo2zh3xr3K3qJTjbQagcNCPTMSSK7IOrggfQP7Nit_Qckd06Mir_vFNr8hgIi_2e_GeqWt1cSgIMQniKOPgnRgJCcupdJOHM84pFVSBxc_r65j2p4-&h=1080&w=1920&format=jpg");
+    INSERT IGNORE INTO feedbacks.apps (appName, logoURL) VALUES ("Fox Sports", "https://storage.pubble.nl/350eaab2/content/2019/9/f6a8a8bf-a65a-4a9b-972d-ae70f0de327f_thumb840.jpg");
+    INSERT IGNORE INTO feedbacks.apps (appName, logoURL) VALUES ("NLZiet", "https://www.nlziet.nl/nl/wp-content/uploads/2017/09/NLZIET_Op_Wit.png");
+    INSERT IGNORE INTO feedbacks.apps (appName, logoURL) VALUES ("RTL XL", "https://vpndiensten.nl/wp-content/uploads/2016/03/rtl-xl-in-buitenland.png");
 ENGINE = InnoDB
 AUTO_INCREMENT = 17
 DEFAULT CHARACTER SET = utf8mb4

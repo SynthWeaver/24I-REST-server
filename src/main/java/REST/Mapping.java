@@ -28,6 +28,12 @@ public class Mapping {
         return db.selectAll();
     }
 
+    @ResponseBody
+    @GetMapping("/get/apps")
+    public JSONArray getApps() throws SQLException {
+        return db.selectAllAps();
+    }
+
     // template for /post:
     // {"smiley" : 7, "feedback" : "Nice UI", "category" : "feedback", "device" : "Pixel", "os" : "Android", "app" : "SomeApp", "image" : ""}
     @ResponseBody

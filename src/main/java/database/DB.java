@@ -11,7 +11,7 @@ public class DB {
     private MysqlDataSource dataSource = new MysqlDataSource();
     private Connection conn ;
     private Statement stmt;
-    ResultSet rs, rs2 ;
+    ResultSet rs, rs2;
 
 
     //
@@ -59,6 +59,16 @@ public class DB {
         return jsonArray;
     }
 
+    public JSONArray selectAllAps() throws SQLException {
+        open();
+        rs = stmt.executeQuery("SELECT * FROM apps");
+
+        JSONArray jsonArray = printAppDB();
+        close();
+        return jsonArray;
+    }
+
+
     // For POST method
     // (Category should be either "bugreport", "suggestion" or "feedback")
     public void insert(JSONObject jsonObject) throws SQLException {
@@ -98,6 +108,20 @@ public class DB {
             jsonObject.put("os", rs.getString("os"));
             jsonObject.put("app", rs.getString("app"));
             jsonObject.put("image", rs.getString("image"));
+
+            jsonArray.add(jsonObject);
+        }
+        return jsonArray;
+    }
+
+    private JSONArray printAppDB() throws SQLException {
+        JSONArray jsonArray = new JSONArray();
+
+        while (rs.next()) {
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("id", rs.getInt("id"));
+            jsonObject.put("appName", rs.getString("appName"));
+            jsonObject.put("logoURL", rs.getString("logoURL"));
 
             jsonArray.add(jsonObject);
         }
