@@ -28,6 +28,7 @@ public class Mapping {
         return db.selectAll();
     }
 
+    // get all apps from DB
     @ResponseBody
     @GetMapping("/get/apps")
     public JSONArray getApps() throws SQLException {

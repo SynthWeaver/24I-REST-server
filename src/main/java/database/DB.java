@@ -23,7 +23,7 @@ public class DB {
                 "jdbc:mysql://localhost/feedbacks?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC"
         );
         dataSource.setUser("root");
-        dataSource.setPassword("Team24iDB");
+        dataSource.setPassword("root");
     }
 
     private void open() throws SQLException {
@@ -59,10 +59,12 @@ public class DB {
         return jsonArray;
     }
 
+    // select all apps from DB
     public JSONArray selectAllAps() throws SQLException {
         open();
         rs = stmt.executeQuery("SELECT * FROM apps");
 
+        // Fetch each row from the result set
         JSONArray jsonArray = printAppDB();
         close();
         return jsonArray;
