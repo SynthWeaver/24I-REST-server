@@ -136,7 +136,7 @@ public class DB {
         JSONArray jsonArray = new JSONArray();
         while (rs.next()) {
             JSONObject jsonObject = new JSONObject();
-            jsonObject.put("line count"+request, rs.getInt("lc"));
+            jsonObject.put("line count "+request, rs.getInt("lc"));
 
             jsonArray.add(jsonObject);
         }
@@ -285,7 +285,7 @@ public class DB {
     }
 
     //
-    // These two queries are being used by Analytics.java
+    // These queries are being used by Analytics.java
     //
 
     // total line count as integer
@@ -309,6 +309,46 @@ public class DB {
         while (rs.next()) {
             jsonArray.add(rs.getString("feedback"));
         }
+        close();
+        return jsonArray;
+    }
+
+    public JSONArray avgPerApp() throws SQLException {
+        int sum = 0;
+        int avg = 0;
+        int count = 0;
+
+        open();
+
+        rs = stmt.executeQuery("SELECT COUNT(DISTINCT app) AS lc FROM feedback");
+        while (rs.next()) {
+            count = rs.getInt("lc");
+        }
+
+        rs = stmt.executeQuery("SELECT DISTINCT app FROM feedback");
+
+        JSONArray jsonArray = new JSONArray();
+        JSONObject jsonObject = new JSONObject();
+
+        while (rs.next()) {
+            jsonObject.put("app", rs.getString("app"));
+        }
+
+        for (int i = 0; i < count; i++){
+            PreparedStatement ps = conn.prepareStatement("SELECT smiley AS num FROM feedback WHERE app = ?");
+            ps.setString(1, request);
+            rs2 = ps.executeQuery();
+
+            while (rs.next()) {
+                sum += (rs.getInt("num"));
+            }
+        }
+
+
+
+        close();
+
+
         return jsonArray;
     }
 

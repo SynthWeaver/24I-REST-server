@@ -153,5 +153,13 @@ public class Mapping {
         return an.analyzeData();
     }
 
+    // Smiley averages per app
+    @ResponseBody
+    @GetMapping("/getAvgPerApp")
+    public JSONArray getAvgerApp() throws SQLException{
+        return an.avgPerApp();
+    }
+
+
 
 }

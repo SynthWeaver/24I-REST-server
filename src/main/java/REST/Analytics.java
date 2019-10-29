@@ -16,6 +16,7 @@ public class Analytics {
     private String feedback;
 
 
+
     public JSONArray analyzeData() throws SQLException {
         int linecount = db.lineCount();
         feedbackData = db.onlyFB();
@@ -28,9 +29,23 @@ public class Analytics {
         return finalArray;
     }
 
+    public JSONArray avgPerApp() throws SQLException {
+
+        // Create empty array
+        JSONArray newArray = db.avgPerApp();
+
+
+
+
+        // return array
+        return newArray;
+    }
+
+
     private JSONArray checkWords(String givenString){
         JSONArray analyzedArray = new JSONArray();
 
+        // Space character as word separator
         List<String> list = Arrays.asList(givenString.split(" "));
         Set<String> uniqueWords = new HashSet<String>(list);
         for (String word : uniqueWords) {
@@ -41,5 +56,6 @@ public class Analytics {
 
         return analyzedArray;
     }
+
 
 }
