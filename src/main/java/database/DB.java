@@ -11,7 +11,7 @@ public class DB {
     private MysqlDataSource dataSource = new MysqlDataSource();
     private Connection conn ;
     private Statement stmt;
-    ResultSet rs, rs2 ;
+    ResultSet rs, rs2;
 
 
     //
@@ -23,7 +23,7 @@ public class DB {
                 "jdbc:mysql://localhost/feedbacks?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC"
         );
         dataSource.setUser("root");
-        dataSource.setPassword("Team24iDB");
+        dataSource.setPassword("root");
     }
 
     private void open() throws SQLException {
@@ -58,6 +58,18 @@ public class DB {
         close();
         return jsonArray;
     }
+
+    // select all apps from DB
+    public JSONArray selectAllAps() throws SQLException {
+        open();
+        rs = stmt.executeQuery("SELECT * FROM apps");
+
+        // Fetch each row from the result set
+        JSONArray jsonArray = printAppDB();
+        close();
+        return jsonArray;
+    }
+
 
     // For POST method
     // (Category should be either "bugreport", "suggestion" or "feedback")
@@ -98,6 +110,20 @@ public class DB {
             jsonObject.put("os", rs.getString("os"));
             jsonObject.put("app", rs.getString("app"));
             jsonObject.put("image", rs.getString("image"));
+
+            jsonArray.add(jsonObject);
+        }
+        return jsonArray;
+    }
+
+    private JSONArray printAppDB() throws SQLException {
+        JSONArray jsonArray = new JSONArray();
+
+        while (rs.next()) {
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("id", rs.getInt("id"));
+            jsonObject.put("appName", rs.getString("appName"));
+            jsonObject.put("logoURL", rs.getString("logoURL"));
 
             jsonArray.add(jsonObject);
         }
