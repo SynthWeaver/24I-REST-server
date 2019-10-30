@@ -5,6 +5,7 @@ import objects.DateTime;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import java.sql.*;
+import java.util.ArrayList;
 
 public class DB {
 
@@ -23,7 +24,7 @@ public class DB {
                 "jdbc:mysql://localhost/feedbacks?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC"
         );
         dataSource.setUser("root");
-        dataSource.setPassword("root");
+        dataSource.setPassword("Team24iDB");
     }
 
     private void open() throws SQLException {
@@ -38,6 +39,7 @@ public class DB {
     }
 
     private void close() throws SQLException {
+
         rs.close();
         rs2.close();
         stmt.close();
@@ -305,7 +307,7 @@ public class DB {
             JSONArray jsonArray = printDB();
 
             close();
-            ps.close();
+            //ps.close();
             return jsonArray;
         }
     }
@@ -341,39 +343,64 @@ public class DB {
 
     public JSONArray avgPerApp() throws SQLException {
         int sum = 0;
-        int avg = 0;
-        int count = 0;
+        double avg = 0;
+        int appCount = 0;
+        int max = 0;
+        double sumD;
+        double countD;
+        ArrayList<String> apps = new ArrayList<String>();
+        String cur;
+
+
+        JSONArray jsonArray = new JSONArray();
 
         open();
 
-        rs = stmt.executeQuery("SELECT COUNT(DISTINCT app) AS lc FROM feedback");
-        while (rs.next()) {
-            count = rs.getInt("lc");
-        }
-
+        // See how many different apps and put them in an array list
         rs = stmt.executeQuery("SELECT DISTINCT app FROM feedback");
 
-        JSONArray jsonArray = new JSONArray();
-        JSONObject jsonObject = new JSONObject();
-
         while (rs.next()) {
-            jsonObject.put("app", rs.getString("app"));
+
+            apps.add(rs.getString("app"));
+            max++;
         }
 
-        for (int i = 0; i < count; i++){
+        // For every app in the array list, check the smileys, add them to variable sum
+        for (int i = 0; i < max; i++){
+            cur = apps.get(i);
             PreparedStatement ps = conn.prepareStatement("SELECT smiley AS num FROM feedback WHERE app = ?");
-            ps.setString(1, request);
-            rs2 = ps.executeQuery();
+            ps.setString(1, cur);
+            rs = ps.executeQuery();
 
             while (rs.next()) {
                 sum += (rs.getInt("num"));
             }
+
+            // Get line count for this app
+            ps = conn.prepareStatement("SELECT COUNT(*) AS cn FROM feedback WHERE app = ?");
+            ps.setString(1, cur);
+            rs2 = ps.executeQuery();
+
+            while (rs2.next()) {
+                appCount = (rs2.getInt("cn"));
+            }
+
+            //calculate average
+            sumD = sum;
+            countD = appCount;
+            avg = sumD/countD;
+            int newAvg = (int)(avg*100);
+
+            JSONObject jsonOb = new JSONObject();
+            jsonOb.put("app", cur);
+            jsonOb.put("avg", newAvg);
+            jsonArray.add(jsonOb);
+            sum = 0;
         }
 
 
 
         close();
-
 
         return jsonArray;
     }

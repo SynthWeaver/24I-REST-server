@@ -1,7 +1,6 @@
 package REST;
 
 import database.DB;
-import REST.Analytics;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -163,8 +162,8 @@ public class Mapping {
     // Smiley averages per app
     @ResponseBody
     @GetMapping("/getAvgPerApp")
-    public JSONArray getAvgerApp() throws SQLException{
-        return an.avgPerApp();
+    public JSONArray getAvgPerApp() throws SQLException{
+        return db.avgPerApp();
     }
 
 
