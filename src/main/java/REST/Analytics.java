@@ -13,9 +13,6 @@ public class Analytics {
     DB db = new DB();
     JSONArray feedbackData = new JSONArray();
 
-    private String feedback;
-
-
     public JSONArray analyzeData() throws SQLException {
         int linecount = db.lineCount();
         feedbackData = db.onlyFB();
@@ -31,6 +28,7 @@ public class Analytics {
     private JSONArray checkWords(String givenString){
         JSONArray analyzedArray = new JSONArray();
 
+        // Space character as word separator
         List<String> list = Arrays.asList(givenString.split(" "));
         Set<String> uniqueWords = new HashSet<String>(list);
         for (String word : uniqueWords) {
@@ -41,5 +39,4 @@ public class Analytics {
 
         return analyzedArray;
     }
-
 }

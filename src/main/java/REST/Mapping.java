@@ -1,7 +1,6 @@
 package REST;
 
 import database.DB;
-import REST.Analytics;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -60,7 +59,7 @@ public class Mapping {
     //how many smileys of a specific value
     @ResponseBody
     @GetMapping("/get/linecount/smiley/{request}")
-    public JSONArray smileyLineCount(@PathVariable("request") String request) throws SQLException, Exception {
+    public JSONArray smileyLineCount(@PathVariable("request") String request ) throws SQLException, Exception {
         int reqTest = 0;
         try {
             reqTest = Integer.parseInt(request);
@@ -75,11 +74,17 @@ public class Mapping {
         }
     }
 
+    @ResponseBody
+    @GetMapping("/get/linecount/smiley")
+    public JSONArray smileyLineCountAll() throws SQLException, Exception {
+        return db.smileyCountAll();
+    }
+
     //only feedback from a specific os
     @ResponseBody
     @GetMapping("/get/os/{request}")
     public JSONArray osCount(@PathVariable("request") String request) throws SQLException, Exception {
-            return db.osCount(request);
+        return db.osCount(request);
     }
 
     // only feedbacks from 2 specific os
@@ -107,6 +112,12 @@ public class Mapping {
         else {
             throw new Exception();
         }
+    }
+
+    @ResponseBody
+    @GetMapping("/get/feedbacks")
+    public JSONArray timeRange() throws SQLException, Exception {
+        return db.feedbacksPerMonth();
     }
 
     // Sort by device: /get/device/asc or /get/device/desc
@@ -160,5 +171,10 @@ public class Mapping {
         return an.analyzeData();
     }
 
-
+    // Smiley averages per app
+    @ResponseBody
+    @GetMapping("/getAvgPerApp")
+    public JSONArray getAvgPerApp() throws SQLException{
+        return db.avgPerApp();
+    }
 }
