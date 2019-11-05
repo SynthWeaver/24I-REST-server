@@ -118,12 +118,12 @@ public class DB {
 
     private JSONArray printAppDB() throws SQLException {
         JSONArray jsonArray = new JSONArray();
-
         while (rs.next()) {
             JSONObject jsonObject = new JSONObject();
             jsonObject.put("id", rs.getInt("id"));
             jsonObject.put("appName", rs.getString("appName"));
             jsonObject.put("logoURL", rs.getString("logoURL"));
+            jsonObject.put("template", rs.getString("template"));
 
             jsonArray.add(jsonObject);
         }
