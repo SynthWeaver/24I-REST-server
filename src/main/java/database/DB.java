@@ -106,6 +106,24 @@ public class DB {
         return jsonArray;
     }
 
+    // retrieves the app based on the passed id
+    public JSONArray selectAppFromId(Integer id) throws SQLException {
+        Statement stmt;
+        Connection conn = DBConnection.connection();
+        stmt = conn.createStatement();
+
+        PreparedStatement ps = conn.prepareStatement("SELECT * FROM apps WHERE id = ?");
+        ps.setInt(1, id);
+
+        ResultSet rs = ps.executeQuery();
+        // Fetch each row from the result set
+        JSONArray jsonArray = printAppDB(rs);
+        close(rs);
+        close(stmt);
+        return jsonArray;
+
+    }
+
     //
     // OTHER QUERIES
     //

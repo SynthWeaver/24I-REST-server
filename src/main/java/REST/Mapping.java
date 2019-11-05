@@ -36,6 +36,14 @@ public class Mapping {
         return db.selectAllAps();
     }
 
+    // get specific app from id
+    @ResponseBody
+    @GetMapping("/get/apps/{id}")
+    public JSONArray getAppFromId(@PathVariable("id") Integer id) throws SQLException {
+        return db.selectAppFromId(id);
+
+    }
+
     // template for /post:
     // {"smiley" : 7, "feedback" : "Nice UI", "category" : "feedback", "device" : "Pixel", "os" : "Android", "app" : "SomeApp", "image" : ""}
     @ResponseBody
