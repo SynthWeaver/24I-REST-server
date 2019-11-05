@@ -14,7 +14,9 @@ import java.sql.SQLException;
 public class Mapping {
 
     DB db = new DB();
-    Analytics an = new Analytics();
+
+    // Analytics disabled until it's fixed
+    // Analytics an = new Analytics();
 
     //
     // MAIN METHODS
@@ -165,11 +167,12 @@ public class Mapping {
     }
 
     // analyzed data for dashboard app
-    @ResponseBody
+    // Disabled until it's fixed
+/*    @ResponseBody
     @GetMapping("/getAnData")
     public JSONArray getAnData() throws SQLException{
         return an.analyzeData();
-    }
+    }*/
 
     // Smiley averages per app
     @ResponseBody

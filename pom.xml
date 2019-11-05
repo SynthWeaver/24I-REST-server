@@ -49,6 +49,7 @@
             <artifactId>simplejava</artifactId>
             <version>v0.1-alpha</version>
         </dependency>
+
     </dependencies>
 
     <properties>

@@ -464,11 +464,13 @@ public class DB {
             sumD = sum;
             countD = appCount;
             avg = sumD/countD;
-            DecimalFormat df = new DecimalFormat("#.00");
+            //DecimalFormat df = new DecimalFormat("#.00");
+            int newAvg = (int)(avg*100);
 
             JSONObject jsonOb = new JSONObject();
             jsonOb.put("app", cur);
-            jsonOb.put("avg", df.format(avg));
+            //jsonOb.put("avg", df.format(avg));
+            jsonOb.put("avg", newAvg);
             jsonArray.add(jsonOb);
             sum = 0;
         }
