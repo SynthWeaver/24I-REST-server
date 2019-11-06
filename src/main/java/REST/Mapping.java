@@ -58,6 +58,13 @@ public class Mapping {
         return db.feedbackCount();
     }
 
+    //Category distribution
+    @ResponseBody
+    @GetMapping("/get/catDistr")
+    public JSONArray catDistr() throws SQLException{
+        return db.catDistr();
+    }
+
     //how many smileys of a specific value
     @ResponseBody
     @GetMapping("/get/linecount/smiley/{request}")

@@ -5,7 +5,6 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import java.sql.*;
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 
 public class DB {
@@ -70,11 +69,11 @@ public class DB {
         close(stmt);
     }
 
-    // (to be used by the queries)
+    // (to be used by the queries), for putting JSONObjects into the JSONArray
     private JSONArray printDB(ResultSet rs) throws SQLException{
         JSONArray jsonArray = new JSONArray();
         ResultSetMetaData rsmd = rs.getMetaData();
-        int columnsNumber = rsmd.getColumnCount();
+        //int columnsNumber = rsmd.getColumnCount();
         while (rs.next()) {
             JSONObject jsonObject = new JSONObject();
             jsonObject.put("id", rs.getInt("id"));
@@ -129,6 +128,7 @@ public class DB {
         return jsonArray;
     }
 
+    // Amount of all smileys
     public JSONArray smileyCountAll() throws SQLException {
 
         Statement stmt;
@@ -177,14 +177,15 @@ public class DB {
 
         stmt = conn.createStatement();
 
-        String android = "android";
-        String ios = "ios";
+        //String android = "android";
+        //String ios = "ios";
 
         PreparedStatement ps = conn.prepareStatement("SELECT COUNT(*) AS lc FROM feedback WHERE os LIKE ?");
         PreparedStatement ps2 = conn.prepareStatement("SELECT COUNT(*) AS lc2 FROM feedback WHERE os LIKE ?");
 
         ps.setString(1, "%" + os1 + "%");
         ps2.setString(1, "%" + os2 + "%");
+
         ResultSet rs = ps.executeQuery();
 
         JSONObject jsonObject = new JSONObject();
@@ -345,6 +346,7 @@ public class DB {
         return jsonArray;
     }
 
+    // Sort smileys by ascending or descending OR see only feedbacks with a specific smiley value
     public JSONArray smiley(String request) throws SQLException {
         Statement stmt;
         Connection conn = DBConnection.connection();
@@ -379,10 +381,6 @@ public class DB {
         }
     }
 
-    //
-    // These queries are being used by Analytics.java
-    //
-
     // total line count as integer
     public int lineCount() throws SQLException {
 
@@ -414,6 +412,42 @@ public class DB {
         return jsonArray;
     }
 
+    // Category distribution
+    public JSONArray catDistr() throws SQLException {
+
+        Statement stmt;
+        Connection conn = DBConnection.connection();
+        stmt = conn.createStatement();
+
+
+        JSONObject jsonObject = new JSONObject();
+        JSONArray jsonArray = new JSONArray();
+
+
+        ResultSet rs = stmt.executeQuery("SELECT COUNT(*) AS lc FROM feedback WHERE category = 'feedback'");
+
+        while (rs.next()) {
+            jsonObject.put("feedback", rs.getInt("lc"));
+        }
+
+        rs = stmt.executeQuery("SELECT COUNT(*) AS lc2 FROM feedback WHERE category = 'bugreport'");
+        while (rs.next()) {
+            jsonObject.put("bugreport", rs.getInt("lc2"));
+        }
+
+        rs = stmt.executeQuery("SELECT COUNT(*) AS lc3 FROM feedback WHERE category = 'suggestion'");
+        while (rs.next()) {
+            jsonObject.put("suggestion", rs.getInt("lc3"));
+        }
+
+        jsonArray.add(jsonObject);
+        close(rs);
+        close(stmt);
+        return jsonArray;
+    }
+
+
+    // average grade per app
     public JSONArray avgPerApp() throws SQLException {
         int sum = 0;
         double avg = 0;
@@ -460,16 +494,14 @@ public class DB {
                 appCount = (rs.getInt("cn"));
             }
 
-            //calculate average
+            //calculate average, convert into integer between 1-100 for the react native chart
             sumD = sum;
             countD = appCount;
             avg = sumD/countD;
-            //DecimalFormat df = new DecimalFormat("#.00");
             int newAvg = (int)(avg*100);
 
             JSONObject jsonOb = new JSONObject();
             jsonOb.put("app", cur);
-            //jsonOb.put("avg", df.format(avg));
             jsonOb.put("avg", newAvg);
             jsonArray.add(jsonOb);
             sum = 0;
@@ -479,6 +511,12 @@ public class DB {
         return jsonArray;
     }
 
+    //
+    // CLOSING STATEMENT/RESULTSET
+    //
+
+
+    // close Statement
     public void close(Statement stmt) {
         try {
             if (stmt != null) {
@@ -489,6 +527,7 @@ public class DB {
         }
     }
 
+    // close ResultSet
     public void close(ResultSet rs) {
         try {
             if (rs != null) {
