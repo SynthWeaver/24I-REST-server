@@ -13,10 +13,10 @@ public class DBConnection {
 
     static {
         dataSource.setURL(
-                "jdbc:mysql://localhost/feedbacks?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC"
+                "jdbc:mysql://remotemysql.com/1WKvtfAKZ1?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC"
         );
-        dataSource.setUser("root");
-        dataSource.setPassword("Team24iDB");
+        dataSource.setUser("1WKvtfAKZ1");
+        dataSource.setPassword("KzGbcrkuv4");
     }
 
     public static Connection connection() throws SQLException {
