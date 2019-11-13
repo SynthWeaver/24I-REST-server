@@ -48,21 +48,26 @@ public class DB {
         Statement stmt;
         Connection conn = DBConnection.connection();
         stmt = conn.createStatement();
+        //In frontend feedback moet het gemaakte jsonobject aangepast worden zodat er onder andere een feedback_id aangemaakt wordt
+        int feedback_id =  Integer.parseInt(jsonObject.get("feedback_id").toString());
+        String app = jsonObject.get("app").toString();
+        String feature = jsonObject.get("feature").toString();
+        int rating = Integer.parseInt(jsonObject.get("rating").toString());
 
-        String smiley = jsonObject.get("smiley").toString();
+        int stars = Integer.parseInt(jsonObject.get("stars").toString());
         String feedback = jsonObject.get("feedback").toString();
         String category = jsonObject.get("category").toString();
         String time = DateTime.now();
         String device = jsonObject.get("device").toString();
         String os = jsonObject.get("os").toString();
-        String app = jsonObject.get("app").toString();
+
         String image = jsonObject.get("image").toString();
 
         String query = String.format("INSERT INTO feedbacks.feedback" +
-                        "(smiley,feedback,category,time,device,os,app,image)" +
+                        "(feedback_id, rating, star,feedback,category,time,device,os,app,image,features)" +
                         "VALUES" +
                         "(%s,'%s','%s','%s','%s','%s','%s','%s');",
-                smiley, feedback, category, time, device, os, app, image
+                 feedback, category, time, device, os, app, image, stars, feature, feedback_id, rating
         );
 
         stmt.executeUpdate(query);
