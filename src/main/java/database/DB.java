@@ -58,7 +58,7 @@ public class DB {
         String app = jsonObject.get("app").toString();
         String image = jsonObject.get("image").toString();
 
-        String query = String.format("INSERT INTO feedbacks.feedback" +
+        String query = String.format("INSERT INTO 1WKvtfAKZ1.feedback" +
                         "(smiley,feedback,category,time,device,os,app,image)" +
                         "VALUES" +
                         "(%s,'%s','%s','%s','%s','%s','%s','%s');",
