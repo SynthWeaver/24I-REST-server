@@ -105,6 +105,20 @@ public class DB {
         return jsonArray;
     }
 
+    private JSONArray printTemplateDB(ResultSet rs) throws SQLException {
+        JSONArray jsonArray = new JSONArray();
+        while(rs.next()) {
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("id", rs.getInt("Id"));
+            jsonObject.put("featureConfig", rs.getString("FeatureConfig"));
+            jsonObject.put("starQuestion", rs.getString("StarQuestion"));
+            jsonObject.put("app", rs.getString("App"));
+
+            jsonArray.add(jsonObject);
+        }
+        return jsonArray;
+    }
+
     // retrieves the app based on the passed id
     public JSONArray selectAppFromId(Integer id) throws SQLException {
         Statement stmt;
@@ -121,6 +135,22 @@ public class DB {
         close(stmt);
         return jsonArray;
 
+    }
+
+    public JSONArray selectTemplateConfigByApp(Integer id) throws SQLException {
+        Statement stmt;
+        Connection conn = DBConnection.connection();
+        stmt = conn.createStatement();
+
+        PreparedStatement ps = conn.prepareStatement("SELECT * FROM TemplateConfig WHERE App = ?");
+        ps.setInt(1, id);
+
+        ResultSet rs = ps.executeQuery();
+        // Fetch each row from the result set
+        JSONArray jsonArray = printTemplateDB(rs);
+        close(rs);
+        close(stmt);
+        return jsonArray;
     }
 
     //
