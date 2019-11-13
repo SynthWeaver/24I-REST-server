@@ -181,6 +181,13 @@ public class Mapping {
         }
     }
 
+    // get feedbacks of specific app
+    @ResponseBody
+    @GetMapping("/get/{app}")
+    public JSONArray selectAllAPP(@PathVariable("app") String request) throws SQLException {
+        return db.selectAllAPP(request);
+    }
+
     // analyzed data for dashboard app
     // Disabled until it's fixed
 /*    @ResponseBody

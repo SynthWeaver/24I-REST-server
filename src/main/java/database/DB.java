@@ -530,6 +530,34 @@ public class DB {
     }
 
     //
+    // FOR SPECIFIC APP INFO
+    //
+
+    // basic select all for a specific app
+    public JSONArray selectAllAPP(String request) throws SQLException {
+        Statement stmt;
+        Connection conn = DBConnection.connection();
+        stmt = conn.createStatement();
+        PreparedStatement ps = conn.prepareStatement("SELECT * FROM feedback WHERE app = ?");
+        ps.setString(1, request);
+        ResultSet rs = ps.executeQuery();
+
+        // Fetch each row from the result set
+        JSONArray jsonArray = printDB(rs);
+        close(rs);
+        close(stmt);
+        return jsonArray;
+    }
+
+
+
+
+
+
+
+
+
+    //
     // CLOSING STATEMENT/RESULTSET
     //
 
