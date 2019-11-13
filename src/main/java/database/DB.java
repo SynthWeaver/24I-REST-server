@@ -110,9 +110,11 @@ public class DB {
         while(rs.next()) {
             JSONObject jsonObject = new JSONObject();
             jsonObject.put("id", rs.getInt("Id"));
+            jsonObject.put("template", rs.getString("Template"));
             jsonObject.put("featureConfig", rs.getString("FeatureConfig"));
             jsonObject.put("starQuestion", rs.getString("StarQuestion"));
-            jsonObject.put("app", rs.getString("App"));
+            jsonObject.put("app", rs.getInt("App"));
+            jsonObject.put("appName", rs.getString("appName"));
 
             jsonArray.add(jsonObject);
         }
@@ -142,7 +144,7 @@ public class DB {
         Connection conn = DBConnection.connection();
         stmt = conn.createStatement();
 
-        PreparedStatement ps = conn.prepareStatement("SELECT * FROM TemplateConfig WHERE App = ?");
+        PreparedStatement ps = conn.prepareStatement("SELECT t.Id, t.Template, t.StarQuestion, t.FeatureConfig, t.App, a.appName FROM TemplateConfig t INNER JOIN apps a ON t.App = a.id WHERE App = ?");
         ps.setInt(1, id);
 
         ResultSet rs = ps.executeQuery();
