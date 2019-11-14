@@ -18,7 +18,7 @@ public class DB {
         Statement stmt;
         Connection conn = DBConnection.connection();
         stmt = conn.createStatement();
-        ResultSet rs = stmt.executeQuery("SELECT * FROM feedback");
+        ResultSet rs = stmt.executeQuery("SELECT * FROM app_feedback");
 
         // Fetch each row from the result set
         JSONArray jsonArray = printDB(rs);
@@ -49,25 +49,26 @@ public class DB {
         Connection conn = DBConnection.connection();
         stmt = conn.createStatement();
         //In frontend feedback moet het gemaakte jsonobject aangepast worden zodat er onder andere een feedback_id aangemaakt wordt
-        int feedback_id =  Integer.parseInt(jsonObject.get("feedback_id").toString());
+//        String feedback_id = jsonObject.get("feedback_id").toString();
         String app = jsonObject.get("app").toString();
         String feature = jsonObject.get("feature").toString();
-        int rating = Integer.parseInt(jsonObject.get("rating").toString());
+        String rating = jsonObject.get("rating").toString();
 
-        int stars = Integer.parseInt(jsonObject.get("stars").toString());
+        String stars = jsonObject.get("stars").toString();
         String feedback = jsonObject.get("feedback").toString();
         String category = jsonObject.get("category").toString();
+        String starQuestion = jsonObject.get("starQuestion").toString();
         String time = DateTime.now();
         String device = jsonObject.get("device").toString();
         String os = jsonObject.get("os").toString();
 
         String image = jsonObject.get("image").toString();
 
-        String query = String.format("INSERT INTO feedbacks.feedback" +
-                        "(feedback_id, rating, star,feedback,category,time,device,os,app,image,features)" +
+        String query = String.format("INSERT INTO 1WKvtfAKZ1.app_feedback" +
+                        "(feedback, category, time, device,os,app,image,stars,features,rating,star_question)" +
                         "VALUES" +
-                        "(%s,'%s','%s','%s','%s','%s','%s','%s');",
-                 feedback, category, time, device, os, app, image, stars, feature, feedback_id, rating
+                        "('%s','%s','%s','%s','%s','%s','%s','%s','%s','%s', '%s');",
+                 feedback, category, time, device, os, app, image, stars, feature, rating, starQuestion
         );
 
         stmt.executeUpdate(query);
@@ -81,8 +82,7 @@ public class DB {
         //int columnsNumber = rsmd.getColumnCount();
         while (rs.next()) {
             JSONObject jsonObject = new JSONObject();
-            jsonObject.put("id", rs.getInt("id"));
-            jsonObject.put("smiley", rs.getInt("smiley"));
+            jsonObject.put("id", rs.getInt("feedback_id"));
             jsonObject.put("feedback", rs.getString("feedback"));
             jsonObject.put("category", rs.getString("category"));
             jsonObject.put("time", rs.getString("time"));
@@ -90,6 +90,10 @@ public class DB {
             jsonObject.put("os", rs.getString("os"));
             jsonObject.put("app", rs.getString("app"));
             jsonObject.put("image", rs.getString("image"));
+            jsonObject.put("feature", rs.getString("features"));
+            jsonObject.put("stars", rs.getString("stars"));
+            jsonObject.put("rating", rs.getString("rating"));
+            jsonObject.put("starQuestion", rs.getString("star_question"));
 
             jsonArray.add(jsonObject);
         }
