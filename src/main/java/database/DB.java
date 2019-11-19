@@ -18,7 +18,7 @@ public class DB {
         Statement stmt;
         Connection conn = DBConnection.connection();
         stmt = conn.createStatement();
-        ResultSet rs = stmt.executeQuery("SELECT * FROM app_feedback");
+        ResultSet rs = stmt.executeQuery("SELECT * FROM feedback");
 
         // Fetch each row from the result set
         JSONArray jsonArray = printDB(rs);
@@ -48,27 +48,21 @@ public class DB {
         Statement stmt;
         Connection conn = DBConnection.connection();
         stmt = conn.createStatement();
-        //In frontend feedback moet het gemaakte jsonobject aangepast worden zodat er onder andere een feedback_id aangemaakt wordt
-//        String feedback_id = jsonObject.get("feedback_id").toString();
-        String app = jsonObject.get("app").toString();
-        String feature = jsonObject.get("feature").toString();
-        String rating = jsonObject.get("rating").toString();
 
-        String stars = jsonObject.get("stars").toString();
+        String smiley = jsonObject.get("smiley").toString();
         String feedback = jsonObject.get("feedback").toString();
         String category = jsonObject.get("category").toString();
-        String starQuestion = jsonObject.get("starQuestion").toString();
         String time = DateTime.now();
         String device = jsonObject.get("device").toString();
         String os = jsonObject.get("os").toString();
-
+        String app = jsonObject.get("app").toString();
         String image = jsonObject.get("image").toString();
 
-        String query = String.format("INSERT INTO 1WKvtfAKZ1.app_feedback" +
-                        "(feedback, category, time, device,os,app,image,stars,features,rating,star_question)" +
+        String query = String.format("INSERT INTO feedbacks_feedback" +
+                        "(smiley,feedback,category,time,device,os,app,image)" +
                         "VALUES" +
                         "('%s','%s','%s','%s','%s','%s','%s','%s','%s','%s', '%s');",
-                feedback, category, time, device, os, app, image, stars, feature, rating, starQuestion
+                smiley, feedback, category, time, device, os, app, image
         );
 
         stmt.executeUpdate(query);
@@ -82,7 +76,8 @@ public class DB {
         //int columnsNumber = rsmd.getColumnCount();
         while (rs.next()) {
             JSONObject jsonObject = new JSONObject();
-            jsonObject.put("id", rs.getInt("feedback_id"));
+            jsonObject.put("id", rs.getInt("id"));
+            jsonObject.put("smiley", rs.getString("smiley"));
             jsonObject.put("feedback", rs.getString("feedback"));
             jsonObject.put("category", rs.getString("category"));
             jsonObject.put("time", rs.getString("time"));
@@ -90,11 +85,6 @@ public class DB {
             jsonObject.put("os", rs.getString("os"));
             jsonObject.put("app", rs.getString("app"));
             jsonObject.put("image", rs.getString("image"));
-            jsonObject.put("feature", rs.getString("features"));
-            jsonObject.put("stars", rs.getString("stars"));
-            jsonObject.put("rating", rs.getString("rating"));
-            jsonObject.put("starQuestion", rs.getString("star_question"));
-
             jsonArray.add(jsonObject);
         }
         return jsonArray;
@@ -174,7 +164,7 @@ public class DB {
         Statement stmt;
         Connection conn = DBConnection.connection();
         stmt = conn.createStatement();
-        ResultSet rs = stmt.executeQuery("SELECT COUNT(*) AS lc FROM app_feedback");
+        ResultSet rs = stmt.executeQuery("SELECT COUNT(*) AS lc FROM feedback");
         JSONArray jsonArray = new JSONArray();
         while (rs.next()) {
             JSONObject jsonObject = new JSONObject();
@@ -193,7 +183,7 @@ public class DB {
         Statement stmt;
         Connection conn = DBConnection.connection();
         stmt = conn.createStatement();
-        ResultSet rs = stmt.executeQuery("SELECT DISTINCT rating, count(rating) AS CountOf FROM app_feedback Group By rating ORDER BY CountOf ASC;");
+        ResultSet rs = stmt.executeQuery("SELECT DISTINCT smiley, count(smiley) AS CountOf FROM feedback Group By smiley ORDER BY CountOf ASC;");
         JSONArray jsonArray = new JSONArray();
         while (rs.next()) {
             JSONObject jsonObject = new JSONObject();
@@ -213,7 +203,7 @@ public class DB {
         Connection conn = DBConnection.connection();
         stmt = conn.createStatement();
 
-        PreparedStatement ps = conn.prepareStatement("SELECT COUNT(*) AS lc FROM app_feedback WHERE os LIKE ?");
+        PreparedStatement ps = conn.prepareStatement("SELECT COUNT(*) AS lc FROM feedback WHERE os LIKE ?");
         ps.setString(1, request);
         ResultSet rs = ps.executeQuery();
 
@@ -239,8 +229,8 @@ public class DB {
         //String android = "android";
         //String ios = "ios";
 
-        PreparedStatement ps = conn.prepareStatement("SELECT COUNT(*) AS lc FROM app_feedback WHERE os LIKE ?");
-        PreparedStatement ps2 = conn.prepareStatement("SELECT COUNT(*) AS lc2 FROM app_feedback WHERE os LIKE ?");
+        PreparedStatement ps = conn.prepareStatement("SELECT COUNT(*) AS lc FROM feedback WHERE os LIKE ?");
+        PreparedStatement ps2 = conn.prepareStatement("SELECT COUNT(*) AS lc2 FROM feedback WHERE os LIKE ?");
 
         ps.setString(1, "%" + os1 + "%");
         ps2.setString(1, "%" + os2 + "%");
@@ -271,7 +261,7 @@ public class DB {
         Connection conn = DBConnection.connection();
         stmt = conn.createStatement();
 
-        PreparedStatement ps = conn.prepareStatement("SELECT COUNT(*) AS lc FROM app_feedback WHERE rating = ?");
+        PreparedStatement ps = conn.prepareStatement("SELECT COUNT(*) AS lc FROM feedback WHERE smiley = ?");
         ps.setString(1, request);
         ResultSet rs = ps.executeQuery();
 
@@ -293,7 +283,7 @@ public class DB {
         Connection conn = DBConnection.connection();
         stmt = conn.createStatement();
 
-        PreparedStatement ps = conn.prepareStatement("SELECT * FROM app_feedback  WHERE id = ?");
+        PreparedStatement ps = conn.prepareStatement("SELECT * FROM feedback  WHERE id = ?");
         ps.setString(1, request);
         ResultSet rs = ps.executeQuery();
 
@@ -311,9 +301,9 @@ public class DB {
         ResultSet rs;
 
         if (request.equals("asc")) {
-            rs = stmt.executeQuery("SELECT * FROM app_feedback ORDER BY time ASC");
+            rs = stmt.executeQuery("SELECT * FROM feedback ORDER BY time ASC");
         } else{
-            rs = stmt.executeQuery("SELECT * FROM app_feedback ORDER BY time DESC");
+            rs = stmt.executeQuery("SELECT * FROM feedback ORDER BY time DESC");
         }
 
         JSONArray jsonArray = printDB(rs);
@@ -327,7 +317,7 @@ public class DB {
         Connection conn = DBConnection.connection();
         stmt = conn.createStatement();
         ResultSet rs;
-        rs = stmt.executeQuery("SELECT * FROM app_feedback ORDER BY time ASC");
+        rs = stmt.executeQuery("SELECT * FROM feedback ORDER BY time ASC");
 
 
         JSONArray jsonArray = printDB(rs);
@@ -375,9 +365,9 @@ public class DB {
         ResultSet rs;
 
         if (request.equals("asc")) {
-            rs = stmt.executeQuery("SELECT * FROM app_feedback ORDER BY device ASC");
+            rs = stmt.executeQuery("SELECT * FROM feedback ORDER BY device ASC");
         } else{
-            rs = stmt.executeQuery("SELECT * FROM app_feedback ORDER BY device DESC");
+            rs = stmt.executeQuery("SELECT * FROM feedback ORDER BY device DESC");
         }
 
         JSONArray jsonArray = printDB(rs);
@@ -394,9 +384,9 @@ public class DB {
         ResultSet rs;
 
         if (request.equals("asc")) {
-            rs = stmt.executeQuery("SELECT * FROM app_feedback ORDER BY app ASC");
+            rs = stmt.executeQuery("SELECT * FROM feedback ORDER BY app ASC");
         } else{
-            rs = stmt.executeQuery("SELECT * FROM app_feedback ORDER BY app DESC");
+            rs = stmt.executeQuery("SELECT * FROM feedback ORDER BY app DESC");
         }
 
         JSONArray jsonArray = printDB(rs);
@@ -415,20 +405,20 @@ public class DB {
         ResultSet rs;
 
         if (request.equals("asc")){
-            rs = stmt.executeQuery("SELECT * FROM app_feedback ORDER BY rating ASC");
+            rs = stmt.executeQuery("SELECT * FROM feedback ORDER BY smiley ASC");
 
             JSONArray jsonArray = printDB(rs);
             return jsonArray;
 
         } else if (request.equals("desc")){
-            rs = stmt.executeQuery("SELECT * FROM app_feedback ORDER BY rating DESC");
+            rs = stmt.executeQuery("SELECT * FROM feedback ORDER BY smiley DESC");
 
             JSONArray jsonArray = printDB(rs);
 
             return jsonArray;
 
         } else {
-            PreparedStatement ps = conn.prepareStatement("SELECT * FROM app_feedback WHERE rating = ?");
+            PreparedStatement ps = conn.prepareStatement("SELECT * FROM feedback WHERE smiley = ?");
             ps.setString(1, request);
             rs = ps.executeQuery();
 
@@ -447,7 +437,7 @@ public class DB {
         Statement stmt;
         Connection conn = DBConnection.connection();
         stmt = conn.createStatement();
-        ResultSet rs = stmt.executeQuery("SELECT COUNT(*) AS lc FROM app_feedback");
+        ResultSet rs = stmt.executeQuery("SELECT COUNT(*) AS lc FROM feedback");
         while (rs.next()) {
             linecount = rs.getInt("lc");
         }
@@ -461,7 +451,7 @@ public class DB {
         Statement stmt;
         Connection conn = DBConnection.connection();
         stmt = conn.createStatement();
-        ResultSet rs = stmt.executeQuery("SELECT feedback FROM app_feedback");
+        ResultSet rs = stmt.executeQuery("SELECT feedback FROM feedback");
         JSONArray jsonArray = new JSONArray();
         while (rs.next()) {
             jsonArray.add(rs.getString("feedback"));
@@ -483,18 +473,18 @@ public class DB {
         JSONArray jsonArray = new JSONArray();
 
 
-        ResultSet rs = stmt.executeQuery("SELECT COUNT(*) AS lc FROM app_feedback WHERE category = 'feedback'");
+        ResultSet rs = stmt.executeQuery("SELECT COUNT(*) AS lc FROM feedback WHERE category = 'feedback'");
 
         while (rs.next()) {
             jsonObject.put("feedback", rs.getInt("lc"));
         }
 
-        rs = stmt.executeQuery("SELECT COUNT(*) AS lc2 FROM app_feedback WHERE category = 'bugreport'");
+        rs = stmt.executeQuery("SELECT COUNT(*) AS lc2 FROM feedback WHERE category = 'bugreport'");
         while (rs.next()) {
             jsonObject.put("bugreport", rs.getInt("lc2"));
         }
 
-        rs = stmt.executeQuery("SELECT COUNT(*) AS lc3 FROM app_feedback WHERE category = 'suggestion'");
+        rs = stmt.executeQuery("SELECT COUNT(*) AS lc3 FROM feedback WHERE category = 'suggestion'");
         while (rs.next()) {
             jsonObject.put("suggestion", rs.getInt("lc3"));
         }
@@ -524,7 +514,7 @@ public class DB {
         stmt = conn.createStatement();
 
         // See how many different apps and put them in an array list
-        ResultSet rs = stmt.executeQuery("SELECT DISTINCT app FROM app_feedback ORDER BY app");
+        ResultSet rs = stmt.executeQuery("SELECT DISTINCT app FROM feedback ORDER BY app");
 
         while (rs.next()) {
 
@@ -535,7 +525,7 @@ public class DB {
         // For every app in the array list, check the smileys, add them to variable sum
         for (int i = 0; i < max; i++){
             cur = apps.get(i);
-            PreparedStatement ps = conn.prepareStatement("SELECT rating AS num FROM app_feedback WHERE app = ?");
+            PreparedStatement ps = conn.prepareStatement("SELECT smiley AS num FROM feedback WHERE app = ?");
             ps.setString(1, cur);
             rs = ps.executeQuery();
 
@@ -544,7 +534,7 @@ public class DB {
             }
 
             // Get line count for this app
-            ps = conn.prepareStatement("SELECT COUNT(*) AS cn FROM app_feedback WHERE app = ? AND rating IS NOT NULL");
+            ps = conn.prepareStatement("SELECT COUNT(*) AS cn FROM feedback WHERE app = ? AND smiley IS NOT NULL");
             ps.setString(1, cur);
             rs = ps.executeQuery();
 
@@ -578,7 +568,7 @@ public class DB {
         Statement stmt;
         Connection conn = DBConnection.connection();
         stmt = conn.createStatement();
-        PreparedStatement ps = conn.prepareStatement("SELECT * FROM app_feedback WHERE app = ?");
+        PreparedStatement ps = conn.prepareStatement("SELECT * FROM feedback WHERE app = ?");
         ps.setString(1, request);
         ResultSet rs = ps.executeQuery();
 
@@ -595,7 +585,7 @@ public class DB {
         Statement stmt;
         Connection conn = DBConnection.connection();
         stmt = conn.createStatement();
-        PreparedStatement ps = conn.prepareStatement("DELETE FROM app_feedback WHERE feedback_id = ?");
+        PreparedStatement ps = conn.prepareStatement("DELETE FROM feedback WHERE feedback_id = ?");
         ps.setInt(1, request);
         Integer result = ps.executeUpdate();
         close(stmt);
