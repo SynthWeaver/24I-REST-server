@@ -20,11 +20,9 @@ public class DBConnection {
     }
 
     public static Connection connection() throws SQLException {
-        // Wenn es bisher keine Conncetion zur DB gab, ...
         if (con == null) {
             con = dataSource.getConnection();
         }
-        // Zurückgegeben der Verbindung
         return con;
     }
 }

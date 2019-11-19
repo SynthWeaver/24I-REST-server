@@ -36,6 +36,14 @@ public class Mapping {
         return db.selectAllAps();
     }
 
+    // get specific app from id
+    @ResponseBody
+    @GetMapping("/get/apps/{id}")
+    public JSONArray getAppFromId(@PathVariable("id") Integer id) throws SQLException {
+        return db.selectAppFromId(id);
+
+    }
+
     // template for /post:
     // {"smiley" : 7, "feedback" : "Nice UI", "category" : "feedback", "device" : "Pixel", "os" : "Android", "app" : "SomeApp", "image" : ""}
     @ResponseBody
@@ -56,6 +64,13 @@ public class Mapping {
     @GetMapping("/get/linecount")
     public JSONArray getLineCount() throws SQLException{
         return db.feedbackCount();
+    }
+
+    //Category distribution
+    @ResponseBody
+    @GetMapping("/get/catDistr")
+    public JSONArray catDistr() throws SQLException{
+        return db.catDistr();
     }
 
     //how many smileys of a specific value
@@ -164,6 +179,13 @@ public class Mapping {
         else {
             throw new Exception();
         }
+    }
+
+    // get feedbacks of specific app
+    @ResponseBody
+    @GetMapping("/get/{app}")
+    public JSONArray selectAllAPP(@PathVariable("app") String request) throws SQLException {
+        return db.selectAllAPP(request);
     }
 
     // analyzed data for dashboard app
