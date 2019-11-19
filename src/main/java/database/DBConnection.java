@@ -18,15 +18,13 @@ public class DBConnection {
         //url remotemysql.com
         //password Team24iDB
         dataSource.setUser("1WKvtfAKZ1");
-        dataSource.setPassword("KzGbcrkuv4");
+            dataSource.setPassword("KzGbcrkuv4");
     }
 
     public static Connection connection() throws SQLException {
-        // Wenn es bisher keine Conncetion zur DB gab, ...
         if (con == null) {
             con = dataSource.getConnection();
         }
-        // Zurückgegeben der Verbindung
         return con;
     }
 }
