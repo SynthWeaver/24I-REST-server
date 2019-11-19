@@ -261,18 +261,24 @@ public class DB {
         ResultSet rs = ps.executeQuery();
 
         JSONObject jsonObject = new JSONObject();
+        JSONObject jsonObject2 = new JSONObject();
+
         JSONArray jsonArray = new JSONArray();
 
         while (rs.next()) {
-            jsonObject.put(os1, rs.getInt("lc"));
+            jsonObject.put("os", os1);
+            jsonObject.put("count", rs.getInt("lc"));
         }
         rs = ps2.executeQuery();
 
         while (rs.next()) {
-            jsonObject.put(os2, rs.getInt("lc2"));
+            jsonObject2.put("os", os2);
+            jsonObject2.put("count", rs.getInt("lc2"));
         }
 
         jsonArray.add(jsonObject);
+        jsonArray.add(jsonObject2);
+
         close(rs);
         close(stmt);
         return jsonArray;
