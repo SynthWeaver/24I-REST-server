@@ -54,6 +54,15 @@ public class Mapping {
         db.insert(jsonObject);
     }
 
+    //const { appName, logoURL, template, password,}
+    @ResponseBody
+    @RequestMapping(value = "/addAccount", method = RequestMethod.POST, consumes = "text/plain")
+    public void addAccount(@RequestBody String json) throws ParseException, SQLException {
+        JSONParser jsonParser = new JSONParser();
+        JSONObject jsonObject = (JSONObject) jsonParser.parse(json);
+        db.insertAccount(jsonObject);
+    }
+
 
     //
     // OTHER QUERIES
