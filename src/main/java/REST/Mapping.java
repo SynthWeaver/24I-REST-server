@@ -44,6 +44,14 @@ public class Mapping {
 
     }
 
+    @ResponseBody
+    @GetMapping("/get/templates/{id}")
+    public JSONArray getTemplateConfigFromApp(@PathVariable("id") Integer id) throws SQLException {
+        return db.selectTemplateConfigByApp(id);
+    }
+
+
+
     // template for /post:
     // {"smiley" : 7, "feedback" : "Nice UI", "category" : "feedback", "device" : "Pixel", "os" : "Android", "app" : "SomeApp", "image" : ""}
     @ResponseBody

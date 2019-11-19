@@ -16,7 +16,7 @@ public class DBConnection {
                 "jdbc:mysql://remotemysql.com/1WKvtfAKZ1?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC"
         );
         dataSource.setUser("1WKvtfAKZ1");
-        dataSource.setPassword("KzGbcrkuv4");
+            dataSource.setPassword("KzGbcrkuv4");
     }
 
     public static Connection connection() throws SQLException {
