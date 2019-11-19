@@ -219,4 +219,13 @@ public class Mapping {
     public JSONArray getAvgPerApp() throws SQLException{
         return db.avgPerApp();
     }
+
+    // os distribution
+    @ResponseBody
+    @GetMapping("/get/osdist")
+    public JSONArray osDist() throws SQLException {
+        return db.osDist();
+
+    }
+
 }

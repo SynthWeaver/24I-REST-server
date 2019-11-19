@@ -219,6 +219,7 @@ public class DB {
         return jsonArray;
     }
 
+
     // Line count of specific os
     public JSONArray osCount(String request) throws SQLException {
 
@@ -619,6 +620,26 @@ public class DB {
         Integer result = ps.executeUpdate();
         close(stmt);
         return result;
+    }
+
+    // OS Distribution
+    public JSONArray osDist() throws SQLException {
+
+        Statement stmt;
+        Connection conn = DBConnection.connection();
+        stmt = conn.createStatement();
+        ResultSet rs = stmt.executeQuery("SELECT DISTINCT os, count(os) AS CountOf FROM feedback Group By os ORDER BY os ASC;");
+        JSONArray jsonArray = new JSONArray();
+        while (rs.next()) {
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("os", rs.getString("os"));
+            jsonObject.put("count", rs.getInt("CountOf"));
+
+            jsonArray.add(jsonObject);
+        }
+        close(rs);
+        close(stmt);
+        return jsonArray;
     }
 
 
