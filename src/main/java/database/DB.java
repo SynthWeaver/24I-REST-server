@@ -550,6 +550,25 @@ public class DB {
 
 
 
+<<<<<<< Updated upstream
+=======
+    // Delete a feedback
+    public Integer deleteFeedback(Integer request) throws SQLException {
+        Statement stmt;
+        Connection conn = DBConnection.connection();
+        stmt = conn.createStatement();
+        PreparedStatement ps = conn.prepareStatement("DELETE FROM app_feedback WHERE feedback_id = ?");
+        ps.setInt(1, request);
+        Integer result = ps.executeUpdate();
+        close(stmt);
+        return result;
+    }
+
+
+
+
+
+>>>>>>> Stashed changes
     //
     // CLOSING STATEMENT/RESULTSET
     //
