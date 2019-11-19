@@ -197,6 +197,14 @@ public class Mapping {
         return db.selectAllAPP(request);
     }
 
+    // DELETE A FEEDBACK BY ID
+    @ResponseBody
+    @GetMapping("/areyousure/delete/{id}")
+    public int deleteFeedback(@PathVariable("id") Integer id) throws SQLException {
+        return db.deleteFeedback(id);
+    }
+
+
     // analyzed data for dashboard app
     // Disabled until it's fixed
 /*    @ResponseBody

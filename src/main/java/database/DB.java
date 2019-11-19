@@ -58,10 +58,10 @@ public class DB {
         String app = jsonObject.get("app").toString();
         String image = jsonObject.get("image").toString();
 
-        String query = String.format("INSERT INTO feedbacks.feedback" +
+        String query = String.format("INSERT INTO feedbacks_feedback" +
                         "(smiley,feedback,category,time,device,os,app,image)" +
                         "VALUES" +
-                        "(%s,'%s','%s','%s','%s','%s','%s','%s');",
+                        "('%s','%s','%s','%s','%s','%s','%s','%s','%s','%s', '%s');",
                 smiley, feedback, category, time, device, os, app, image
         );
 
@@ -99,7 +99,7 @@ public class DB {
         while (rs.next()) {
             JSONObject jsonObject = new JSONObject();
             jsonObject.put("id", rs.getInt("id"));
-            jsonObject.put("smiley", rs.getInt("smiley"));
+            jsonObject.put("smiley", rs.getString("smiley"));
             jsonObject.put("feedback", rs.getString("feedback"));
             jsonObject.put("category", rs.getString("category"));
             jsonObject.put("time", rs.getString("time"));
@@ -107,7 +107,6 @@ public class DB {
             jsonObject.put("os", rs.getString("os"));
             jsonObject.put("app", rs.getString("app"));
             jsonObject.put("image", rs.getString("image"));
-
             jsonArray.add(jsonObject);
         }
         return jsonArray;
@@ -122,6 +121,22 @@ public class DB {
             jsonObject.put("logoURL", rs.getString("logoURL"));
             jsonObject.put("template", rs.getString("template"));
             jsonObject.put("password", rs.getString("password"));
+
+            jsonArray.add(jsonObject);
+        }
+        return jsonArray;
+    }
+
+    private JSONArray printTemplateDB(ResultSet rs) throws SQLException {
+        JSONArray jsonArray = new JSONArray();
+        while(rs.next()) {
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("id", rs.getInt("Id"));
+            jsonObject.put("template", rs.getString("Template"));
+            jsonObject.put("featureConfig", rs.getString("FeatureConfig"));
+            jsonObject.put("starQuestion", rs.getString("StarQuestion"));
+            jsonObject.put("app", rs.getInt("App"));
+            jsonObject.put("appName", rs.getString("appName"));
 
             jsonArray.add(jsonObject);
         }
@@ -144,6 +159,22 @@ public class DB {
         close(stmt);
         return jsonArray;
 
+    }
+
+    public JSONArray selectTemplateConfigByApp(Integer id) throws SQLException {
+        Statement stmt;
+        Connection conn = DBConnection.connection();
+        stmt = conn.createStatement();
+
+        PreparedStatement ps = conn.prepareStatement("SELECT t.Id, t.Template, t.StarQuestion, t.FeatureConfig, t.App, a.appName FROM TemplateConfig t INNER JOIN apps a ON t.App = a.id WHERE App = ?");
+        ps.setInt(1, id);
+
+        ResultSet rs = ps.executeQuery();
+        // Fetch each row from the result set
+        JSONArray jsonArray = printTemplateDB(rs);
+        close(rs);
+        close(stmt);
+        return jsonArray;
     }
 
     //
@@ -490,10 +521,9 @@ public class DB {
 
     // average grade per app
     public JSONArray avgPerApp() throws SQLException {
-        int sum = 0;
+        int sum = 0, max = 0, appCount = 0, thisInt = 0;
         double avg = 0;
-        int appCount = 0;
-        int max = 0;
+
         double sumD;
         double countD;
         ArrayList<String> apps = new ArrayList<String>();
@@ -527,7 +557,7 @@ public class DB {
             }
 
             // Get line count for this app
-            ps = conn.prepareStatement("SELECT COUNT(*) AS cn FROM feedback WHERE app = ?");
+            ps = conn.prepareStatement("SELECT COUNT(*) AS cn FROM feedback WHERE app = ? AND smiley IS NOT NULL");
             ps.setString(1, cur);
             rs = ps.executeQuery();
 
@@ -552,8 +582,9 @@ public class DB {
         return jsonArray;
     }
 
-
-
+    //
+    // FOR SPECIFIC APP INFO
+    //
 
     // basic select all for a specific app
     public JSONArray selectAllAPP(String request) throws SQLException {
@@ -571,6 +602,18 @@ public class DB {
         return jsonArray;
     }
 
+
+    // Delete a feedback
+    public Integer deleteFeedback(Integer request) throws SQLException {
+        Statement stmt;
+        Connection conn = DBConnection.connection();
+        stmt = conn.createStatement();
+        PreparedStatement ps = conn.prepareStatement("DELETE FROM feedback WHERE feedback_id = ?");
+        ps.setInt(1, request);
+        Integer result = ps.executeUpdate();
+        close(stmt);
+        return result;
+    }
 
 
     //
