@@ -69,6 +69,28 @@ public class DB {
         close(stmt);
     }
 
+    //const { appName, logoURL, template, password,}
+    public void insertAccount(JSONObject jsonObject) throws SQLException {
+        Statement stmt;
+        Connection conn = DBConnection.connection();
+        stmt = conn.createStatement();
+
+        String appName = jsonObject.get("appName").toString();
+        String logoURL = jsonObject.get("logoURL").toString();
+        String template = jsonObject.get("template").toString();
+        String password = jsonObject.get("password").toString();
+
+        String query = String.format("INSERT INTO feedbacks.apps" +
+                        "(appName,logoURL,template,password)" +
+                        "VALUES" +
+                        "('%s','%s','%s','%s');",
+                appName, logoURL, template, password
+        );
+
+        stmt.executeUpdate(query);
+        close(stmt);
+    }
+
     // (to be used by the queries), for putting JSONObjects into the JSONArray
     private JSONArray printDB(ResultSet rs) throws SQLException{
         JSONArray jsonArray = new JSONArray();
@@ -98,6 +120,7 @@ public class DB {
             jsonObject.put("appName", rs.getString("appName"));
             jsonObject.put("logoURL", rs.getString("logoURL"));
             jsonObject.put("template", rs.getString("template"));
+            jsonObject.put("password", rs.getString("password"));
 
             jsonArray.add(jsonObject);
         }
