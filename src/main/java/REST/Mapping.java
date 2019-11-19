@@ -41,7 +41,6 @@ public class Mapping {
     @GetMapping("/get/apps/{id}")
     public JSONArray getAppFromId(@PathVariable("id") Integer id) throws SQLException {
         return db.selectAppFromId(id);
-
     }
 
     // template for /post:
@@ -73,6 +72,13 @@ public class Mapping {
     @GetMapping("/get/linecount")
     public JSONArray getLineCount() throws SQLException{
         return db.feedbackCount();
+    }
+
+    //linecount; how many feedbacks
+    @ResponseBody
+    @GetMapping("/get/appByName/{name}")
+    public JSONObject getAppByName(@PathVariable("name") String name ) throws SQLException {
+        return db.getAppByName(name);
     }
 
     //Category distribution
