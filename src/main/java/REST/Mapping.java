@@ -41,7 +41,6 @@ public class Mapping {
     @GetMapping("/get/apps/{id}")
     public JSONArray getAppFromId(@PathVariable("id") Integer id) throws SQLException {
         return db.selectAppFromId(id);
-
     }
 
     @ResponseBody
@@ -62,6 +61,15 @@ public class Mapping {
         db.insert(jsonObject);
     }
 
+    //const { appName, logoURL, template, password,}
+    @ResponseBody
+    @RequestMapping(value = "/addAccount", method = RequestMethod.POST, consumes = "text/plain")
+    public void addAccount(@RequestBody String json) throws ParseException, SQLException {
+        JSONParser jsonParser = new JSONParser();
+        JSONObject jsonObject = (JSONObject) jsonParser.parse(json);
+        db.insertAccount(jsonObject);
+    }
+
 
     //
     // OTHER QUERIES
@@ -72,6 +80,13 @@ public class Mapping {
     @GetMapping("/get/linecount")
     public JSONArray getLineCount() throws SQLException{
         return db.feedbackCount();
+    }
+
+    //linecount; how many feedbacks
+    @ResponseBody
+    @GetMapping("/get/appByName/{name}")
+    public JSONObject getAppByName(@PathVariable("name") String name ) throws SQLException {
+        return db.getAppByName(name);
     }
 
     //Category distribution
@@ -188,6 +203,21 @@ public class Mapping {
             throw new Exception();
         }
     }
+
+    // get feedbacks of specific app
+    @ResponseBody
+    @GetMapping("/get/{app}")
+    public JSONArray selectAllAPP(@PathVariable("app") String request) throws SQLException {
+        return db.selectAllAPP(request);
+    }
+
+    // DELETE A FEEDBACK BY ID
+    @ResponseBody
+    @GetMapping("/areyousure/delete/{id}")
+    public int deleteFeedback(@PathVariable("id") Integer id) throws SQLException {
+        return db.deleteFeedback(id);
+    }
+
 
     // analyzed data for dashboard app
     // Disabled until it's fixed

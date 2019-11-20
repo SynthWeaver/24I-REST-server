@@ -75,6 +75,41 @@ public class DB {
         close(stmt);
     }
 
+    //const { appName, logoURL, template, password,}
+    public void insertAccount(JSONObject jsonObject) throws SQLException {
+        Statement stmt;
+        Connection conn = DBConnection.connection();
+        stmt = conn.createStatement();
+
+        String appName = jsonObject.get("appName").toString();
+        String logoURL = jsonObject.get("logoURL").toString();
+        String template = jsonObject.get("template").toString();
+        String password = jsonObject.get("password").toString();
+        String featureConfig = jsonObject.get("featureConfig").toString();
+        String starQuestion = jsonObject.get("starQuestion").toString();
+
+        String appTableQuery = String.format("INSERT IGNORE INTO 1WKvtfAKZ1.apps" +
+                        "(appName,logoURL,template,password)" +
+                        "VALUES" +
+                        "('%s','%s','%s','%s');",
+                appName, logoURL, template, password
+        );
+
+        stmt.executeUpdate(appTableQuery);
+
+        int appId = selectAppIdFromAppName(appName);
+
+        String configTableQuery = String.format("INSERT INTO 1WKvtfAKZ1.TemplateConfig" +
+                "(Template, FeatureConfig, StarQuestion, App)" +
+                "VALUES" +
+                "('%s', '%s', '%s', '%s')",
+                template, featureConfig, starQuestion, appId
+        );
+
+        stmt.executeUpdate(configTableQuery);
+        close(stmt);
+    }
+
     // (to be used by the queries), for putting JSONObjects into the JSONArray
     private JSONArray printDB(ResultSet rs) throws SQLException{
         JSONArray jsonArray = new JSONArray();
@@ -130,6 +165,22 @@ public class DB {
         return jsonArray;
     }
 
+    public Integer selectAppIdFromAppName(String appName) throws SQLException {
+        Statement stmt;
+        Connection conn = DBConnection.connection();
+        stmt = conn.createStatement();
+
+        PreparedStatement ps = conn.prepareStatement("SELECT id FROM apps WHERE appName = ?");
+        ps.setString(1, appName);
+
+        ResultSet rs = ps.executeQuery();
+
+        int id = printAppId(rs);
+        close(rs);
+        close(stmt);
+        return id;
+    }
+
     // retrieves the app based on the passed id
     public JSONArray selectAppFromId(Integer id) throws SQLException {
         Statement stmt;
@@ -146,6 +197,14 @@ public class DB {
         close(stmt);
         return jsonArray;
 
+    }
+
+    private Integer printAppId(ResultSet rs) throws SQLException {
+        int appId = 0;
+        while (rs.next()) {
+            appId = rs.getInt("id");
+        }
+        return appId;
     }
 
     public JSONArray selectTemplateConfigByApp(Integer id) throws SQLException {
@@ -248,18 +307,24 @@ public class DB {
         ResultSet rs = ps.executeQuery();
 
         JSONObject jsonObject = new JSONObject();
+        JSONObject jsonObject2 = new JSONObject();
+
         JSONArray jsonArray = new JSONArray();
 
         while (rs.next()) {
-            jsonObject.put(os1, rs.getInt("lc"));
+            jsonObject.put("os", os1);
+            jsonObject.put("count", rs.getInt("lc"));
         }
         rs = ps2.executeQuery();
 
         while (rs.next()) {
-            jsonObject.put(os2, rs.getInt("lc2"));
+            jsonObject2.put("os", os2);
+            jsonObject2.put("count", rs.getInt("lc2"));
         }
 
         jsonArray.add(jsonObject);
+        jsonArray.add(jsonObject2);
+
         close(rs);
         close(stmt);
         return jsonArray;
@@ -508,10 +573,9 @@ public class DB {
 
     // average grade per app
     public JSONArray avgPerApp() throws SQLException {
-        int sum = 0;
+        int sum = 0, max = 0, appCount = 0, thisInt = 0;
         double avg = 0;
-        int appCount = 0;
-        int max = 0;
+
         double sumD;
         double countD;
         ArrayList<String> apps = new ArrayList<String>();
@@ -545,7 +609,7 @@ public class DB {
             }
 
             // Get line count for this app
-            ps = conn.prepareStatement("SELECT COUNT(*) AS cn FROM feedback WHERE app = ?");
+            ps = conn.prepareStatement("SELECT COUNT(*) AS cn FROM feedback WHERE app = ? AND smiley IS NOT NULL");
             ps.setString(1, cur);
             rs = ps.executeQuery();
 
@@ -569,6 +633,40 @@ public class DB {
         close(stmt);
         return jsonArray;
     }
+
+    //
+    // FOR SPECIFIC APP INFO
+    //
+
+    // basic select all for a specific app
+    public JSONArray selectAllAPP(String request) throws SQLException {
+        Statement stmt;
+        Connection conn = DBConnection.connection();
+        stmt = conn.createStatement();
+        PreparedStatement ps = conn.prepareStatement("SELECT * FROM feedback WHERE app = ?");
+        ps.setString(1, request);
+        ResultSet rs = ps.executeQuery();
+
+        // Fetch each row from the result set
+        JSONArray jsonArray = printDB(rs);
+        close(rs);
+        close(stmt);
+        return jsonArray;
+    }
+
+
+    // Delete a feedback
+    public Integer deleteFeedback(Integer request) throws SQLException {
+        Statement stmt;
+        Connection conn = DBConnection.connection();
+        stmt = conn.createStatement();
+        PreparedStatement ps = conn.prepareStatement("DELETE FROM feedback WHERE feedback_id = ?");
+        ps.setInt(1, request);
+        Integer result = ps.executeUpdate();
+        close(stmt);
+        return result;
+    }
+
 
     //
     // CLOSING STATEMENT/RESULTSET
@@ -597,4 +695,19 @@ public class DB {
         }
     }
 
+    public JSONObject getAppByName(String name) throws SQLException {
+        Statement stmt;
+        Connection conn = DBConnection.connection();
+        stmt = conn.createStatement();
+
+        PreparedStatement ps = conn.prepareStatement(String.format("SELECT * FROM apps WHERE appName = '%s'", name));
+
+        ResultSet rs = ps.executeQuery();
+        // Fetch each row from the result set
+        JSONArray jsonArray = printAppDB(rs);
+        JSONObject jsonObject = (JSONObject) jsonArray.get(0);
+        close(rs);
+        close(stmt);
+        return jsonObject;
+    }
 }
