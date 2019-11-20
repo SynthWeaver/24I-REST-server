@@ -75,6 +75,29 @@ public class DB {
         close(stmt);
     }
 
+    //const { appName, logoURL, template, password,}
+    public void insertAccount(JSONObject jsonObject) throws SQLException {
+        Statement stmt;
+        Connection conn = DBConnection.connection();
+        stmt = conn.createStatement();
+
+        String appName = jsonObject.get("appName").toString();
+        String logoURL = jsonObject.get("logoURL").toString();
+        String template = jsonObject.get("template").toString();
+        String password = jsonObject.get("password").toString();
+
+        String query = String.format("INSERT INTO feedbacks.apps" +
+                        "(appName,logoURL,template,password)" +
+                        "VALUES" +
+                        "('%s','%s','%s','%s');",
+                appName, logoURL, template, password
+        );
+
+        stmt.executeUpdate(query);
+        close(stmt);
+    }
+
+
     // (to be used by the queries), for putting JSONObjects into the JSONArray
     private JSONArray printDB(ResultSet rs) throws SQLException{
         JSONArray jsonArray = new JSONArray();
@@ -625,4 +648,19 @@ public class DB {
         }
     }
 
+    public JSONObject getAppByName(String name) throws SQLException {
+        Statement stmt;
+        Connection conn = DBConnection.connection();
+        stmt = conn.createStatement();
+
+        PreparedStatement ps = conn.prepareStatement(String.format("SELECT * FROM apps WHERE appName = '%s'", name));
+
+        ResultSet rs = ps.executeQuery();
+        // Fetch each row from the result set
+        JSONArray jsonArray = printAppDB(rs);
+        JSONObject jsonObject = (JSONObject) jsonArray.get(0);
+        close(rs);
+        close(stmt);
+        return jsonObject;
+    }
 }

@@ -50,6 +50,14 @@ public class Mapping {
         return db.selectTemplateConfigByApp(id);
     }
 
+    //const { appName, logoURL, template, password,}
+    @ResponseBody
+    @RequestMapping(value = "/addAccount", method = RequestMethod.POST, consumes = "text/plain")
+    public void addAccount(@RequestBody String json) throws ParseException, SQLException {
+        JSONParser jsonParser = new JSONParser();
+        JSONObject jsonObject = (JSONObject) jsonParser.parse(json);
+        db.insertAccount(jsonObject);
+    }
 
 
     // template for /post:
@@ -72,6 +80,13 @@ public class Mapping {
     @GetMapping("/get/linecount")
     public JSONArray getLineCount() throws SQLException{
         return db.feedbackCount();
+    }
+
+    //linecount; how many feedbacks
+    @ResponseBody
+    @GetMapping("/get/appByName/{name}")
+    public JSONObject getAppByName(@PathVariable("name") String name ) throws SQLException {
+        return db.getAppByName(name);
     }
 
     //Category distribution
