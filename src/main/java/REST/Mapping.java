@@ -1,5 +1,6 @@
 package REST;
 
+import com.mysql.cj.xdevapi.JsonArray;
 import database.DB;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -49,6 +50,26 @@ public class Mapping {
         return db.selectTemplateConfigByApp(id);
     }
 
+    @ResponseBody
+    @GetMapping("/get/feedback/{app}")
+    public JSONArray getFeedbackByApp(@PathVariable("app") String app) throws SQLException {
+        return db.getFeedbackByApp(app);
+    }
+
+    @ResponseBody
+    @GetMapping("/get/feedback")
+    public JSONArray getFeedback() throws SQLException {
+        return db.getFeedback();
+    }
+
+    //const { appName, logoURL, template, password,}
+    @ResponseBody
+    @RequestMapping(value = "/addAccount", method = RequestMethod.POST, consumes = "text/plain")
+    public void addAccount(@RequestBody String json) throws ParseException, SQLException {
+        JSONParser jsonParser = new JSONParser();
+        JSONObject jsonObject = (JSONObject) jsonParser.parse(json);
+        db.insertAccount(jsonObject);
+    }
 
 
     // template for /post:
@@ -61,14 +82,6 @@ public class Mapping {
         db.insert(jsonObject);
     }
 
-    //const { appName, logoURL, template, password,}
-    @ResponseBody
-    @RequestMapping(value = "/addAccount", method = RequestMethod.POST, consumes = "text/plain")
-    public void addAccount(@RequestBody String json) throws ParseException, SQLException {
-        JSONParser jsonParser = new JSONParser();
-        JSONObject jsonObject = (JSONObject) jsonParser.parse(json);
-        db.insertAccount(jsonObject);
-    }
 
 
     //
@@ -217,7 +230,6 @@ public class Mapping {
     public int deleteFeedback(@PathVariable("id") Integer id) throws SQLException {
         return db.deleteFeedback(id);
     }
-
 
     // analyzed data for dashboard app
     // Disabled until it's fixed

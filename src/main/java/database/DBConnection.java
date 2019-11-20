@@ -15,6 +15,8 @@ public class DBConnection {
         dataSource.setURL(
                 "jdbc:mysql://remotemysql.com/1WKvtfAKZ1?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC"
         );
+        //url remotemysql.com
+        //password Team24iDB
         dataSource.setUser("1WKvtfAKZ1");
             dataSource.setPassword("KzGbcrkuv4");
     }
