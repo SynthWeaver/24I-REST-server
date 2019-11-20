@@ -86,7 +86,7 @@ public class DB {
         String template = jsonObject.get("template").toString();
         String password = jsonObject.get("password").toString();
 
-        String query = String.format("INSERT INTO feedbacks.apps" +
+        String query = String.format("INSERT INTO 1WKvtfAKZ1.apps" +
                         "(appName,logoURL,template,password)" +
                         "VALUES" +
                         "('%s','%s','%s','%s');",
@@ -131,6 +131,7 @@ public class DB {
             jsonObject.put("appName", rs.getString("appName"));
             jsonObject.put("logoURL", rs.getString("logoURL"));
             jsonObject.put("template", rs.getString("template"));
+            jsonObject.put("password", rs.getString("password"));
 
             jsonArray.add(jsonObject);
         }
@@ -658,6 +659,11 @@ public class DB {
         ResultSet rs = ps.executeQuery();
         // Fetch each row from the result set
         JSONArray jsonArray = printAppDB(rs);
+
+        if(jsonArray.isEmpty()){
+            return null;
+        }
+
         JSONObject jsonObject = (JSONObject) jsonArray.get(0);
         close(rs);
         close(stmt);
