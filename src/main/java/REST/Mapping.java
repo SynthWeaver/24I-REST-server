@@ -42,7 +42,6 @@ public class Mapping {
     @GetMapping("/get/apps/{id}")
     public JSONArray getAppFromId(@PathVariable("id") Integer id) throws SQLException {
         return db.selectAppFromId(id);
-
     }
 
     @ResponseBody

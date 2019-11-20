@@ -37,7 +37,7 @@ public class DB {
         close(stmt);
 
         if(json.isEmpty()){
-            return null;
+            throw new RuntimeException("Json is empty");
         }
 
         return json;
@@ -46,10 +46,6 @@ public class DB {
     //get data from database with query as object
     private JSONObject getJoByQuery(String query) throws SQLException {
         JSONArray jsonArray = getJaByQuery(query);
-
-        if(jsonArray == null){
-            return null;
-        }
 
         JSONObject jsonObject = (JSONObject) jsonArray.get(0);
 
@@ -62,30 +58,12 @@ public class DB {
 
     // basic select all
     public JSONArray selectAll() throws SQLException {
-        Statement stmt;
-        Connection conn = DBConnection.connection();
-        stmt = conn.createStatement();
-        ResultSet rs = stmt.executeQuery("SELECT * FROM app_feedback");
-
-        // Fetch each row from the result set
-        JSONArray jsonArray = printDB(rs);
-        close(rs);
-        close(stmt);
-        return jsonArray;
+        return getJaByQuery("SELECT * FROM app_feedback");
     }
 
     // select all apps from DB
     public JSONArray selectAllAps() throws SQLException {
-        Statement stmt;
-        Connection conn = DBConnection.connection();
-        stmt = conn.createStatement();
-        ResultSet rs = stmt.executeQuery("SELECT * FROM apps");
-
-        // Fetch each row from the result set
-        JSONArray jsonArray = printAppDB(rs);
-        close(rs);
-        close(stmt);
-        return jsonArray;
+        return this.getJaByQuery("SELECT * FROM apps");
     }
 
 
@@ -203,20 +181,7 @@ public class DB {
 
     // retrieves the app based on the passed id
     public JSONArray selectAppFromId(Integer id) throws SQLException {
-        Statement stmt;
-        Connection conn = DBConnection.connection();
-        stmt = conn.createStatement();
-
-        PreparedStatement ps = conn.prepareStatement("SELECT * FROM apps WHERE id = ?");
-        ps.setInt(1, id);
-
-        ResultSet rs = ps.executeQuery();
-        // Fetch each row from the result set
-        JSONArray jsonArray = printAppDB(rs);
-        close(rs);
-        close(stmt);
-        return jsonArray;
-
+        return getJaByQuery(String.format("SELECT * FROM apps WHERE id = %s", id));
     }
 
     public JSONArray selectTemplateConfigByApp(Integer id) throws SQLException {
