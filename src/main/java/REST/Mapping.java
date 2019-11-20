@@ -74,11 +74,18 @@ public class Mapping {
         return db.feedbackCount();
     }
 
-    //linecount; how many feedbacks
+    //
     @ResponseBody
     @GetMapping("/get/appByName/{name}")
     public JSONObject getAppByName(@PathVariable("name") String name ) throws SQLException {
         return db.getAppByName(name);
+    }
+
+    // feedbacks of specific app
+    @ResponseBody
+    @GetMapping("/get/FbByAppName/{name}")
+    public JSONArray getFbByAppName(@PathVariable("name") String name ) throws SQLException {
+        return db.getFbOfApp(name);
     }
 
     //Category distribution
@@ -151,6 +158,7 @@ public class Mapping {
     public JSONArray timeRange() throws SQLException, Exception {
         return db.feedbacksPerMonth();
     }
+
 
     // Sort by device: /get/device/asc or /get/device/desc
     @ResponseBody

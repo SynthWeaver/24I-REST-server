@@ -686,7 +686,7 @@ public class DB {
         Statement stmt;
         Connection conn = DBConnection.connection();
         stmt = conn.createStatement();
-        PreparedStatement ps = conn.prepareStatement("DELETE FROM feedback WHERE feedback_id = ?");
+        PreparedStatement ps = conn.prepareStatement("DELETE FROM feedback WHERE id = ?");
         ps.setInt(1, request);
         Integer result = ps.executeUpdate();
         close(stmt);
@@ -755,5 +755,24 @@ public class DB {
         close(rs);
         close(stmt);
         return jsonObject;
+    }
+
+    // feedbacks of specific app
+    public JSONArray getFbOfApp(String name) throws SQLException {
+        Statement stmt;
+        Connection conn = DBConnection.connection();
+        stmt = conn.createStatement();
+
+        PreparedStatement ps = conn.prepareStatement("SELECT * FROM feedback WHERE app = ?");
+        ps.setString(1, name);
+        ResultSet rs = ps.executeQuery();
+
+
+        // Fetch each row from the result set
+        JSONArray jsonArray = printDB(rs);
+
+        close(rs);
+        close(stmt);
+        return jsonArray;
     }
 }
