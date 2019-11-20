@@ -9,6 +9,53 @@ import java.util.ArrayList;
 
 public class DB {
 
+    //get data from database with query as array
+    private JSONArray getJaByQuery(String query) throws SQLException {
+        Statement stmt;
+        Connection conn = DBConnection.connection();
+        stmt = conn.createStatement();
+
+        PreparedStatement ps = conn.prepareStatement(query);
+
+        ResultSet rs = ps.executeQuery();
+        // Fetch each row from the result set
+        //JSONArray jsonArray = printAppDB(rs);
+
+        JSONArray json = new JSONArray();
+        ResultSetMetaData rsmd = rs.getMetaData();
+        while(rs.next()) {
+            int numColumns = rsmd.getColumnCount();
+            JSONObject obj = new JSONObject();
+            for (int i=1; i<=numColumns; i++) {
+                String column_name = rsmd.getColumnName(i);
+                obj.put(column_name, rs.getObject(column_name));
+            }
+            json.add(obj);
+        }
+
+        close(rs);
+        close(stmt);
+
+        if(json.isEmpty()){
+            return null;
+        }
+
+        return json;
+    }
+
+    //get data from database with query as object
+    private JSONObject getJoByQuery(String query) throws SQLException {
+        JSONArray jsonArray = getJaByQuery(query);
+
+        if(jsonArray == null){
+            return null;
+        }
+
+        JSONObject jsonObject = (JSONObject) jsonArray.get(0);
+
+        return jsonObject;
+    }
+
     //
     // MAIN QUERIES
     //
@@ -650,23 +697,17 @@ public class DB {
     }
 
     public JSONObject getAppByName(String name) throws SQLException {
-        Statement stmt;
-        Connection conn = DBConnection.connection();
-        stmt = conn.createStatement();
+        String query = String.format("SELECT * FROM apps WHERE appName = '%s'", name);
+        return this.getJoByQuery(query);
+    }
 
-        PreparedStatement ps = conn.prepareStatement(String.format("SELECT * FROM apps WHERE appName = '%s'", name));
+    public JSONArray getFeedbackByApp(String app) throws SQLException {
+        String query = String.format("SELECT * FROM feedback WHERE app = '%s'", app);
+        return this.getJaByQuery(query);
+    }
 
-        ResultSet rs = ps.executeQuery();
-        // Fetch each row from the result set
-        JSONArray jsonArray = printAppDB(rs);
-
-        if(jsonArray.isEmpty()){
-            return null;
-        }
-
-        JSONObject jsonObject = (JSONObject) jsonArray.get(0);
-        close(rs);
-        close(stmt);
-        return jsonObject;
+    public JSONArray getFeedback() throws SQLException {
+        String query = "SELECT * FROM feedback";
+        return this.getJaByQuery(query);
     }
 }

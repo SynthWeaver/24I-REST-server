@@ -1,5 +1,6 @@
 package REST;
 
+import com.mysql.cj.xdevapi.JsonArray;
 import database.DB;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -48,6 +49,18 @@ public class Mapping {
     @GetMapping("/get/templates/{id}")
     public JSONArray getTemplateConfigFromApp(@PathVariable("id") Integer id) throws SQLException {
         return db.selectTemplateConfigByApp(id);
+    }
+
+    @ResponseBody
+    @GetMapping("/get/feedback/{app}")
+    public JSONArray getFeedbackByApp(@PathVariable("app") String app) throws SQLException {
+        return db.getFeedbackByApp(app);
+    }
+
+    @ResponseBody
+    @GetMapping("/get/feedback")
+    public JSONArray getFeedback() throws SQLException {
+        return db.getFeedback();
     }
 
     //const { appName, logoURL, template, password,}
