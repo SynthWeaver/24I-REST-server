@@ -5,6 +5,7 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import java.sql.*;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 
 public class DB {
@@ -528,7 +529,7 @@ public class DB {
 
     // average grade per app
     public JSONArray avgPerApp() throws SQLException {
-        int sum = 0, max = 0, appCount = 0, thisInt = 0;
+        int sum = 0, max = 0, appCount = 0;
         double avg = 0;
 
         double sumD;
@@ -583,6 +584,76 @@ public class DB {
             jsonOb.put("avg", newAvg);
             jsonArray.add(jsonOb);
             sum = 0;
+        }
+        close(rs);
+        close(stmt);
+        return jsonArray;
+    }
+
+    // average stars per question per app
+    public JSONArray avgStarPerQuesPerApp(String request) throws SQLException {
+        int starsum = 0, max = 0, quesCount = 0;
+        double avg = 0;
+
+        double sumD;
+        double countD;
+        ArrayList<String> questions = new ArrayList<String>();
+        String cur;
+
+
+        JSONArray jsonArray = new JSONArray();
+
+        Statement stmt;
+        Connection conn = DBConnection.connection();
+        stmt = conn.createStatement();
+
+        // See how many different questions (in that app), put them in a list
+        PreparedStatement ps = conn.prepareStatement("SELECT DISTINCT star_question FROM app_feedback WHERE app = ? ORDER BY star_question");
+        ps.setString(1, request);
+        ResultSet rs = ps.executeQuery();
+
+        while (rs.next()) {
+
+            questions.add(rs.getString("star_question"));
+            max++;
+        }
+
+        // For every question in the array list, check the stars, add them to variable sum
+        for (int i = 0; i < max; i++){
+            cur = questions.get(i);
+            ps = conn.prepareStatement("SELECT stars AS num FROM app_feedback WHERE star_question = ? AND app = ?");
+            ps.setString(1, cur);
+            ps.setString(2, request);
+
+            rs = ps.executeQuery();
+
+            while (rs.next()) {
+                starsum += (rs.getInt("num"));
+            }
+
+            // Get line count for this app
+            ps = conn.prepareStatement("SELECT COUNT(*) AS cn FROM app_feedback WHERE star_question = ? AND app = ? AND stars IS NOT NULL;");
+            ps.setString(1, cur);
+            ps.setString(2, request);
+            rs = ps.executeQuery();
+
+            while (rs.next()) {
+                quesCount = (rs.getInt("cn"));
+            }
+
+            //calculate average
+            sumD = starsum;
+            countD = quesCount;
+            avg = sumD/countD;
+
+            // for formatting average
+            DecimalFormat df2 = new DecimalFormat("#.00");
+
+            JSONObject jsonOb = new JSONObject();
+            jsonOb.put("question", cur);
+            jsonOb.put("avg", df2.format(avg));
+            jsonArray.add(jsonOb);
+            starsum = 0;
         }
         close(rs);
         close(stmt);

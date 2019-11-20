@@ -226,6 +226,14 @@ public class Mapping {
         return db.avgPerApp();
     }
 
+    // Rating averages per app
+    @ResponseBody
+    @GetMapping("/getAvgRatingPerQuestPerApp/{app}")
+    public JSONArray avgStarPerQuesPerApp(@PathVariable("app") String app) throws SQLException{
+        return db.avgStarPerQuesPerApp(app);
+    }
+
+
     // os distribution
     @ResponseBody
     @GetMapping("/get/osdist")
