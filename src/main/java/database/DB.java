@@ -78,12 +78,27 @@ public class DB {
         Connection conn = DBConnection.connection();
         stmt = conn.createStatement();
 
+        if(jsonObject.isEmpty()){
+            return;
+        }
+
         String appName = jsonObject.get("appName").toString();
         String logoURL = jsonObject.get("logoURL").toString();
         String template = jsonObject.get("template").toString();
+        String password = jsonObject.get("password").toString();
+
+        if(     appName.isEmpty() ||
+                logoURL.isEmpty() ||
+                template.isEmpty() ||
+                password.isEmpty()
+        ){
+            return;
+        }
+
+
         String hashedPassword = null;
         try {
-            hashedPassword = Password.getSaltedHash(jsonObject.get("password").toString());
+            hashedPassword = Password.getSaltedHash(password);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -758,6 +773,11 @@ public class DB {
         ResultSet rs = ps.executeQuery();
         // Fetch each row from the result set
         JSONArray jsonArray = printAppDB(rs);
+
+        if(jsonArray.isEmpty()){
+            return null;
+        }
+
         JSONObject jsonObject = (JSONObject) jsonArray.get(0);
         close(rs);
         close(stmt);
@@ -787,11 +807,22 @@ public class DB {
         String appName = json.get("name");
         String password = json.get("password");
 
-        JSONObject app = this.getAppByName(appName);
-
-        boolean loginResult = Password.check(password, (String) app.get("password"));
-
         JSONObject result = new JSONObject();
+
+        if(appName.isEmpty() || password.isEmpty()){
+            result.put("result", false);
+            return  result;
+        }
+
+        JSONObject app = this.getAppByName(appName);
+        boolean loginResult;
+
+        if(app != null){
+            loginResult = Password.check(password, (String) app.get("password"));
+        }else{
+            loginResult = false;
+        }
+
         result.put("result", loginResult);
 
         return result;
