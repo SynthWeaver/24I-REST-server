@@ -9,6 +9,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.sql.SQLException;
+import java.util.Map;
 
 @Controller
 public class Mapping {
@@ -74,7 +75,12 @@ public class Mapping {
         return db.feedbackCount();
     }
 
-    //
+    @ResponseBody
+    @RequestMapping(value = "/login", method = RequestMethod.POST)
+    public JSONObject login(@RequestBody Map<String, String> json) throws Exception {
+        return db.login(json);
+    }
+
     @ResponseBody
     @GetMapping("/get/appByName/{name}")
     public JSONObject getAppByName(@PathVariable("name") String name ) throws SQLException {

@@ -1,12 +1,14 @@
 package database;
 
 import objects.DateTime;
+import objects.Password;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import java.sql.*;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Map;
 
 public class DB {
 
@@ -79,13 +81,18 @@ public class DB {
         String appName = jsonObject.get("appName").toString();
         String logoURL = jsonObject.get("logoURL").toString();
         String template = jsonObject.get("template").toString();
-        String password = jsonObject.get("password").toString();
+        String hashedPassword = null;
+        try {
+            hashedPassword = Password.getSaltedHash(jsonObject.get("password").toString());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         String query = String.format("INSERT INTO feedbacks.apps" +
                         "(appName,logoURL,template,password)" +
                         "VALUES" +
                         "('%s','%s','%s','%s');",
-                appName, logoURL, template, password
+                appName, logoURL, template, hashedPassword
         );
 
         stmt.executeUpdate(query);
@@ -774,5 +781,19 @@ public class DB {
         close(rs);
         close(stmt);
         return jsonArray;
+    }
+
+    public JSONObject login(Map<String, String> json) throws Exception {
+        String appName = json.get("name");
+        String password = json.get("password");
+
+        JSONObject app = this.getAppByName(appName);
+
+        boolean loginResult = Password.check(password, (String) app.get("password"));
+
+        JSONObject result = new JSONObject();
+        result.put("result", loginResult);
+
+        return result;
     }
 }
