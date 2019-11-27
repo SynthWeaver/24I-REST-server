@@ -103,7 +103,7 @@ public class DB {
             e.printStackTrace();
         }
 
-        String query = String.format("INSERT INTO feedbacks.apps" +
+        String query = String.format("INSERT IGNORE INTO feedbacks.apps" +
                         "(appName,logoURL,template,password)" +
                         "VALUES" +
                         "('%s','%s','%s','%s');",
