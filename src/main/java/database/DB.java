@@ -92,7 +92,7 @@ public class DB {
 
         String image = jsonObject.get("image").toString();
 
-        String query = String.format("INSERT INTO 1WKvtfAKZ1.app_feedback" +
+        String query = String.format("INSERT INTO feedbacks.app_feedback" +
                         "(feedback, category, time, device,os,app,image,stars,features,rating,star_question)" +
                         "VALUES" +
                         "('%s','%s','%s','%s','%s','%s','%s','%s','%s','%s', '%s');",
@@ -123,9 +123,9 @@ public class DB {
         if(     appName.isEmpty() ||
                 logoURL.isEmpty() ||
                 template.isEmpty() ||
-                password.isEmpty() ||
-                featureConfig.isEmpty() ||
-                starQuestion.isEmpty()
+                password.isEmpty()
+                //featureConfig.isEmpty() ||
+                //starQuestion.isEmpty()
         ){
             return;
         }
@@ -137,7 +137,7 @@ public class DB {
             e.printStackTrace();
         }
 
-        String appTableQuery = String.format("INSERT IGNORE INTO 1WKvtfAKZ1.apps" +
+        String appTableQuery = String.format("INSERT IGNORE INTO feedbacks.apps" +
 
                         "(appName,logoURL,template,password)" +
                         "VALUES" +
@@ -149,7 +149,7 @@ public class DB {
 
         int appId = selectAppIdFromAppName(appName);
 
-        String configTableQuery = String.format("INSERT INTO 1WKvtfAKZ1.TemplateConfig" +
+        String configTableQuery = String.format("INSERT INTO feedbacks.TemplateConfig" +
                 "(Template, FeatureConfig, StarQuestion, App)" +
                 "VALUES" +
                 "('%s', '%s', '%s', '%s')",
