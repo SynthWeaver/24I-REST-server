@@ -10,6 +10,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.sql.SQLException;
+import java.util.Map;
 
 @Controller
 public class Mapping {
@@ -95,11 +96,23 @@ public class Mapping {
         return db.feedbackCount();
     }
 
-    //linecount; how many feedbacks
+    @ResponseBody
+    @RequestMapping(value = "/login", method = RequestMethod.POST)
+    public JSONObject login(@RequestBody Map<String, String> json) throws Exception {
+        return db.login(json);
+    }
+
     @ResponseBody
     @GetMapping("/get/appByName/{name}")
     public JSONObject getAppByName(@PathVariable("name") String name ) throws SQLException {
         return db.getAppByName(name);
+    }
+
+    // feedbacks of specific app
+    @ResponseBody
+    @GetMapping("/get/FbByAppName/{name}")
+    public JSONArray getFbByAppName(@PathVariable("name") String name ) throws SQLException {
+        return db.getFbOfApp(name);
     }
 
     //Category distribution
@@ -173,6 +186,7 @@ public class Mapping {
         return db.feedbacksPerMonth();
     }
 
+
     // Sort by device: /get/device/asc or /get/device/desc
     @ResponseBody
     @GetMapping("/get/device/{request}")
@@ -245,4 +259,21 @@ public class Mapping {
     public JSONArray getAvgPerApp() throws SQLException{
         return db.avgPerApp();
     }
+
+    // Rating averages per app
+    @ResponseBody
+    @GetMapping("/getAvgRatingPerQuestPerApp/{app}")
+    public JSONArray avgStarPerQuesPerApp(@PathVariable("app") String app) throws SQLException{
+        return db.avgStarPerQuesPerApp(app);
+    }
+
+
+    // os distribution
+    @ResponseBody
+    @GetMapping("/get/osdist")
+    public JSONArray osDist() throws SQLException {
+        return db.osDist();
+
+    }
+
 }

@@ -1,11 +1,14 @@
 package database;
 
 import objects.DateTime;
+import objects.Password;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import java.sql.*;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Map;
 
 public class DB {
 
@@ -106,6 +109,10 @@ public class DB {
         Connection conn = DBConnection.connection();
         stmt = conn.createStatement();
 
+        if(jsonObject.isEmpty()){
+            return;
+        }
+
         String appName = jsonObject.get("appName").toString();
         String logoURL = jsonObject.get("logoURL").toString();
         String template = jsonObject.get("template").toString();
@@ -113,11 +120,29 @@ public class DB {
         String featureConfig = jsonObject.get("featureConfig").toString();
         String starQuestion = jsonObject.get("starQuestion").toString();
 
+        if(     appName.isEmpty() ||
+                logoURL.isEmpty() ||
+                template.isEmpty() ||
+                password.isEmpty() ||
+                featureConfig.isEmpty() ||
+                starQuestion.isEmpty()
+        ){
+            return;
+        }
+
+        String hashedPassword = null;
+        try {
+            hashedPassword = Password.getSaltedHash(password);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
         String appTableQuery = String.format("INSERT IGNORE INTO 1WKvtfAKZ1.apps" +
+
                         "(appName,logoURL,template,password)" +
                         "VALUES" +
                         "('%s','%s','%s','%s');",
-                appName, logoURL, template, password
+                appName, logoURL, template, hashedPassword
         );
 
         stmt.executeUpdate(appTableQuery);
@@ -278,6 +303,7 @@ public class DB {
         close(stmt);
         return jsonArray;
     }
+
 
     // Line count of specific os
     public JSONArray osCount(String request) throws SQLException {
@@ -587,7 +613,7 @@ public class DB {
 
     // average grade per app
     public JSONArray avgPerApp() throws SQLException {
-        int sum = 0, max = 0, appCount = 0, thisInt = 0;
+        int sum = 0, max = 0, appCount = 0;
         double avg = 0;
 
         double sumD;
@@ -648,6 +674,76 @@ public class DB {
         return jsonArray;
     }
 
+    // average stars per question per app
+    public JSONArray avgStarPerQuesPerApp(String request) throws SQLException {
+        int starsum = 0, max = 0, quesCount = 0;
+        double avg = 0;
+
+        double sumD;
+        double countD;
+        ArrayList<String> questions = new ArrayList<String>();
+        String cur;
+
+
+        JSONArray jsonArray = new JSONArray();
+
+        Statement stmt;
+        Connection conn = DBConnection.connection();
+        stmt = conn.createStatement();
+
+        // See how many different questions (in that app), put them in a list
+        PreparedStatement ps = conn.prepareStatement("SELECT DISTINCT star_question FROM app_feedback WHERE app = ? ORDER BY star_question");
+        ps.setString(1, request);
+        ResultSet rs = ps.executeQuery();
+
+        while (rs.next()) {
+
+            questions.add(rs.getString("star_question"));
+            max++;
+        }
+
+        // For every question in the array list, check the stars, add them to variable sum
+        for (int i = 0; i < max; i++){
+            cur = questions.get(i);
+            ps = conn.prepareStatement("SELECT stars AS num FROM app_feedback WHERE star_question = ? AND app = ?");
+            ps.setString(1, cur);
+            ps.setString(2, request);
+
+            rs = ps.executeQuery();
+
+            while (rs.next()) {
+                starsum += (rs.getInt("num"));
+            }
+
+            // Get line count for this app
+            ps = conn.prepareStatement("SELECT COUNT(*) AS cn FROM app_feedback WHERE star_question = ? AND app = ? AND stars IS NOT NULL;");
+            ps.setString(1, cur);
+            ps.setString(2, request);
+            rs = ps.executeQuery();
+
+            while (rs.next()) {
+                quesCount = (rs.getInt("cn"));
+            }
+
+            //calculate average
+            sumD = starsum;
+            countD = quesCount;
+            avg = sumD/countD;
+
+            // for formatting average
+            DecimalFormat df2 = new DecimalFormat("#.00");
+
+            JSONObject jsonOb = new JSONObject();
+            jsonOb.put("question", cur);
+            jsonOb.put("avg", df2.format(avg));
+            jsonArray.add(jsonOb);
+            starsum = 0;
+        }
+        close(rs);
+        close(stmt);
+        return jsonArray;
+    }
+
     //
     // FOR SPECIFIC APP INFO
     //
@@ -674,11 +770,31 @@ public class DB {
         Statement stmt;
         Connection conn = DBConnection.connection();
         stmt = conn.createStatement();
-        PreparedStatement ps = conn.prepareStatement("DELETE FROM feedback WHERE feedback_id = ?");
+        PreparedStatement ps = conn.prepareStatement("DELETE FROM feedback WHERE id = ?");
         ps.setInt(1, request);
         Integer result = ps.executeUpdate();
         close(stmt);
         return result;
+    }
+
+    // OS Distribution
+    public JSONArray osDist() throws SQLException {
+
+        Statement stmt;
+        Connection conn = DBConnection.connection();
+        stmt = conn.createStatement();
+        ResultSet rs = stmt.executeQuery("SELECT DISTINCT os, count(os) AS CountOf FROM feedback Group By os ORDER BY os ASC;");
+        JSONArray jsonArray = new JSONArray();
+        while (rs.next()) {
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("os", rs.getString("os"));
+            jsonObject.put("count", rs.getInt("CountOf"));
+
+            jsonArray.add(jsonObject);
+        }
+        close(rs);
+        close(stmt);
+        return jsonArray;
     }
 
 
@@ -722,5 +838,49 @@ public class DB {
     public JSONArray getFeedback() throws SQLException {
         String query = "SELECT * FROM feedback";
         return this.getJaByQuery(query);
+    }
+
+    // feedbacks of specific app
+    public JSONArray getFbOfApp(String name) throws SQLException {
+        Statement stmt;
+        Connection conn = DBConnection.connection();
+        stmt = conn.createStatement();
+
+        PreparedStatement ps = conn.prepareStatement("SELECT * FROM feedback WHERE app = ?");
+        ps.setString(1, name);
+        ResultSet rs = ps.executeQuery();
+
+
+        // Fetch each row from the result set
+        JSONArray jsonArray = printDB(rs);
+
+        close(rs);
+        close(stmt);
+        return jsonArray;
+    }
+
+    public JSONObject login(Map<String, String> json) throws Exception {
+        String appName = json.get("name");
+        String password = json.get("password");
+
+        JSONObject result = new JSONObject();
+
+        if(appName.isEmpty() || password.isEmpty()){
+            result.put("result", false);
+            return  result;
+        }
+
+        JSONObject app = this.getAppByName(appName);
+        boolean loginResult;
+
+        if(app != null){
+            loginResult = Password.check(password, (String) app.get("password"));
+        }else{
+            loginResult = false;
+        }
+
+        result.put("result", loginResult);
+
+        return result;
     }
 }
