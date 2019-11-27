@@ -1,6 +1,5 @@
 package REST;
 
-import com.mysql.cj.xdevapi.JsonArray;
 import database.DB;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -16,9 +15,6 @@ import java.util.Map;
 public class Mapping {
 
     DB db = new DB();
-
-    // Analytics disabled until it's fixed
-    // Analytics an = new Analytics();
 
     //
     // MAIN METHODS
@@ -38,40 +34,19 @@ public class Mapping {
         return db.selectAllAps();
     }
 
+    // get all apps with questions from DB
+    @ResponseBody
+    @GetMapping("/get/appsWithQuestions")
+    public JSONArray getAppsWithQuestions() throws SQLException {
+        return db.selectAllAppsWithQuestions();
+    }
+
     // get specific app from id
     @ResponseBody
     @GetMapping("/get/apps/{id}")
     public JSONArray getAppFromId(@PathVariable("id") Integer id) throws SQLException {
         return db.selectAppFromId(id);
     }
-
-    @ResponseBody
-    @GetMapping("/get/templates/{id}")
-    public JSONArray getTemplateConfigFromApp(@PathVariable("id") Integer id) throws SQLException {
-        return db.selectTemplateConfigByApp(id);
-    }
-
-    @ResponseBody
-    @GetMapping("/get/feedback/{app}")
-    public JSONArray getFeedbackByApp(@PathVariable("app") String app) throws SQLException {
-        return db.getFeedbackByApp(app);
-    }
-
-    @ResponseBody
-    @GetMapping("/get/feedback")
-    public JSONArray getFeedback() throws SQLException {
-        return db.getFeedback();
-    }
-
-    //const { appName, logoURL, template, password,}
-    @ResponseBody
-    @RequestMapping(value = "/addAccount", method = RequestMethod.POST, consumes = "text/plain")
-    public void addAccount(@RequestBody String json) throws ParseException, SQLException {
-        JSONParser jsonParser = new JSONParser();
-        JSONObject jsonObject = (JSONObject) jsonParser.parse(json);
-        db.insertAccount(jsonObject);
-    }
-
 
     // template for /post:
     // {"smiley" : 7, "feedback" : "Nice UI", "category" : "feedback", "device" : "Pixel", "os" : "Android", "app" : "SomeApp", "image" : ""}
@@ -83,6 +58,14 @@ public class Mapping {
         db.insert(jsonObject);
     }
 
+    //const { appName, logoURL, template, password,}
+    @ResponseBody
+    @RequestMapping(value = "/addAccount", method = RequestMethod.POST, consumes = "text/plain")
+    public void addAccount(@RequestBody String json) throws ParseException, SQLException {
+        JSONParser jsonParser = new JSONParser();
+        JSONObject jsonObject = (JSONObject) jsonParser.parse(json);
+        db.insertAccount(jsonObject);
+    }
 
 
     //
@@ -144,6 +127,13 @@ public class Mapping {
     @GetMapping("/get/linecount/smiley")
     public JSONArray smileyLineCountAll() throws SQLException, Exception {
         return db.smileyCountAll();
+    }
+
+    // Feedbacks per year
+    @ResponseBody
+    @GetMapping("/get/feedbacks/year")
+    public JSONArray feedbacksPerYear() throws SQLException, Exception {
+        return db.feedbacksPerYear();
     }
 
     //only feedback from a specific os
@@ -245,13 +235,6 @@ public class Mapping {
         return db.deleteFeedback(id);
     }
 
-    // analyzed data for dashboard app
-    // Disabled until it's fixed
-/*    @ResponseBody
-    @GetMapping("/getAnData")
-    public JSONArray getAnData() throws SQLException{
-        return an.analyzeData();
-    }*/
 
     // Smiley averages per app
     @ResponseBody
@@ -267,13 +250,6 @@ public class Mapping {
         return db.avgStarPerQuesPerApp(app);
     }
 
-    // Rating averages per app
-    @ResponseBody
-    @GetMapping("/getAvgRatingPerQuestion")
-    public JSONArray avgStarPerQuestion() throws SQLException{
-        return db.avgStarPerQuestion();
-    }
-
 
     // os distribution
     @ResponseBody
@@ -282,5 +258,7 @@ public class Mapping {
         return db.osDist();
 
     }
+
+
 
 }
