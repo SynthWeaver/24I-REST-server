@@ -1,7 +1,7 @@
 package REST;
 
-import com.mysql.cj.xdevapi.JsonArray;
 import database.DB;
+import database.DBConnection;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -9,6 +9,8 @@ import org.json.simple.parser.ParseException;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Map;
 
@@ -28,21 +30,42 @@ public class Mapping {
     @ResponseBody
     @GetMapping("/get")
     public JSONArray get() throws SQLException{
-        return db.selectAll();
+        String query = "SELECT * FROM app_feedback";
+        PreparedStatement preparedStatement = db.getPreparedStatementFromQuery(query);
+
+        //preparedStatement.setString(1, customerId);
+        ResultSet resultSet = preparedStatement.executeQuery();
+        JSONArray jsonArray = db.getJSONArrayByResultSet(resultSet);
+        preparedStatement.close();
+        return jsonArray;
     }
 
     // get all apps from DB
     @ResponseBody
     @GetMapping("/get/apps")
     public JSONArray getApps() throws SQLException {
-        return db.selectAllAps();
+        String query = "SELECT * FROM apps";
+        PreparedStatement preparedStatement = db.getPreparedStatementFromQuery(query);
+
+        //preparedStatement.setString(1, customerId);
+        ResultSet resultSet = preparedStatement.executeQuery();
+        JSONArray jsonArray = db.getJSONArrayByResultSet(resultSet);
+        preparedStatement.close();
+        return jsonArray;
     }
 
     // get specific app from id
     @ResponseBody
     @GetMapping("/get/apps/{id}")
     public JSONArray getAppFromId(@PathVariable("id") Integer id) throws SQLException {
-        return db.selectAppFromId(id);
+        String query = "SELECT * FROM apps WHERE id = ?";
+        PreparedStatement preparedStatement = db.getPreparedStatementFromQuery(query);
+
+        preparedStatement.setInt(1, id);
+        ResultSet resultSet = preparedStatement.executeQuery();
+        JSONArray jsonArray = db.getJSONArrayByResultSet(resultSet);
+        preparedStatement.close();
+        return jsonArray;
     }
 
     @ResponseBody
@@ -54,13 +77,26 @@ public class Mapping {
     @ResponseBody
     @GetMapping("/get/feedback/{app}")
     public JSONArray getFeedbackByApp(@PathVariable("app") String app) throws SQLException {
-        return db.getFeedbackByApp(app);
+        String query = "SELECT * FROM feedback WHERE app = ?";
+        PreparedStatement preparedStatement = db.getPreparedStatementFromQuery(query);
+
+        preparedStatement.setString(1, app);
+        ResultSet resultSet = preparedStatement.executeQuery();
+        JSONArray jsonArray = db.getJSONArrayByResultSet(resultSet);
+        preparedStatement.close();
+        return jsonArray;
     }
 
     @ResponseBody
     @GetMapping("/get/feedback")
     public JSONArray getFeedback() throws SQLException {
-        return db.getFeedback();
+        String query = "SELECT * FROM feedback";
+        PreparedStatement preparedStatement = db.getPreparedStatementFromQuery(query);
+
+        ResultSet resultSet = preparedStatement.executeQuery();
+        JSONArray jsonArray = db.getJSONArrayByResultSet(resultSet);
+        preparedStatement.close();
+        return jsonArray;
     }
 
     //const { appName, logoURL, template, password,}
@@ -112,7 +148,14 @@ public class Mapping {
     @ResponseBody
     @GetMapping("/get/FbByAppName/{name}")
     public JSONArray getFbByAppName(@PathVariable("name") String name ) throws SQLException {
-        return db.getFbOfApp(name);
+        String query = "SELECT * FROM feedback WHERE app = ?";
+        PreparedStatement preparedStatement = db.getPreparedStatementFromQuery(query);
+
+        preparedStatement.setString(1, name);
+        ResultSet resultSet = preparedStatement.executeQuery();
+        JSONArray jsonArray = db.getJSONArrayByResultSet(resultSet);
+        preparedStatement.close();
+        return jsonArray;
     }
 
     //Category distribution

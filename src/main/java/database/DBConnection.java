@@ -1,5 +1,6 @@
 package database;
 
+import com.mysql.cj.MysqlConnection;
 import com.mysql.cj.jdbc.MysqlDataSource;
 
 import java.sql.Connection;
@@ -26,6 +27,14 @@ public class DBConnection {
         if (con == null) {
             con = dataSource.getConnection();
         }
+        if(con.isClosed()){
+            dataSource = new MysqlDataSource();
+            con = dataSource.getConnection();
+        }
         return con;
+    }
+
+    public static void close() throws SQLException {
+        DBConnection.connection().close();
     }
 }

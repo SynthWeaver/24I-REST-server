@@ -5,7 +5,6 @@ import objects.Password;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
-import javax.xml.transform.Result;
 import java.sql.*;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -14,16 +13,7 @@ import java.util.Map;
 public class DB {
 
     //get data from database with query as array
-    private JSONArray getJaByQuery(String query) throws SQLException {
-        Statement stmt;
-        Connection conn = DBConnection.connection();
-        stmt = conn.createStatement();
-
-        PreparedStatement ps = conn.prepareStatement(query);
-
-        ResultSet rs = ps.executeQuery();
-        // Fetch each row from the result set
-        //JSONArray jsonArray = printAppDB(rs);
+    public JSONArray getJSONArrayByResultSet(ResultSet  rs) throws SQLException {
 
         JSONArray json = new JSONArray();
         ResultSetMetaData rsmd = rs.getMetaData();
@@ -37,71 +27,81 @@ public class DB {
             json.add(obj);
         }
 
-        close(rs);
-        close(stmt);
-
         if(json.isEmpty()){
             throw new RuntimeException("Json is empty");
         }
+
+        this.close(rs);
 
         return json;
     }
 
     //get data from database with query as object
-    private JSONObject getJoByQuery(String query) throws SQLException {
-        JSONArray jsonArray = getJaByQuery(query);
+    public JSONObject getJSONObjectByResultSet(ResultSet rs) throws SQLException {
+        JSONArray jsonArray = getJSONArrayByResultSet(rs);
 
         JSONObject jsonObject = (JSONObject) jsonArray.get(0);
 
         return jsonObject;
     }
 
+    public PreparedStatement getPreparedStatementFromQuery(String query) throws SQLException {
+        Connection connection = DBConnection.connection();
+        return connection.prepareStatement(query);
+    }
+
     //
     // MAIN QUERIES
     //
-
-    // basic select all
-    public JSONArray selectAll() throws SQLException {
-        return getJaByQuery("SELECT * FROM app_feedback");
-    }
-
-    // select all apps from DB
-    public JSONArray selectAllAps() throws SQLException {
-        return this.getJaByQuery("SELECT * FROM apps");
-    }
 
 
     // For POST method
     // (Category should be either "bugreport", "suggestion" or "feedback")
     public void insert(JSONObject jsonObject) throws SQLException {
-        Statement stmt;
-        Connection conn = DBConnection.connection();
-        stmt = conn.createStatement();
-        //In frontend feedback moet het gemaakte jsonobject aangepast worden zodat er onder andere een feedback_id aangemaakt wordt
-//        String feedback_id = jsonObject.get("feedback_id").toString();
-        String app = jsonObject.get("app").toString();
-        String feature = jsonObject.get("feature").toString();
-        String rating = jsonObject.get("rating").toString();
 
-        String stars = jsonObject.get("stars").toString();
+        //In frontend feedback moet het gemaakte jsonobject aangepast worden zodat er onder andere een feedback_id aangemaakt wordt
+
+        //put in string to prevent null point exception
         String feedback = jsonObject.get("feedback").toString();
         String category = jsonObject.get("category").toString();
-        String starQuestion = jsonObject.get("starQuestion").toString();
         String time = DateTime.now();
         String device = jsonObject.get("device").toString();
         String os = jsonObject.get("os").toString();
-
+        String app = jsonObject.get("app").toString();
         String image = jsonObject.get("image").toString();
+        String stars = jsonObject.get("stars").toString();
+        String feature = jsonObject.get("feature").toString();
+        String rating = jsonObject.get("rating").toString();
+        String starQuestion = jsonObject.get("starQuestion").toString();
 
-        String query = String.format("INSERT INTO 1WKvtfAKZ1.app_feedback" +
-                        "(feedback, category, time, device,os,app,image,stars,features,rating,star_question)" +
-                        "VALUES" +
-                        "('%s','%s','%s','%s','%s','%s','%s','%s','%s','%s', '%s');",
-                 feedback, category, time, device, os, app, image, stars, feature, rating, starQuestion
-        );
+        String[] data = new String[]{
+                feedback,
+                category,
+                time,
+                device,
+                os,
+                app,
+                image,
+                stars,
+                feature,
+                rating,
+                starQuestion,
+        };
 
-        stmt.executeUpdate(query);
-        close(stmt);
+        String query =  "INSERT INTO 1WKvtfAKZ1.app_feedback" +
+                                "(feedback, category, time, device,os,app,image,stars,features,rating,star_question)" +
+                                "VALUES" +
+                                "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
+
+        PreparedStatement preparedStatement = getPreparedStatementFromQuery(query);
+
+        for(int i = 0; i < data.length; i++) {
+            preparedStatement.setString(i, data[i]);
+        }
+
+        ResultSet resultSet = preparedStatement.executeQuery();
+
+        this.close(resultSet);
     }
 
     //const { appName, logoURL, template, password,}
@@ -235,11 +235,6 @@ public class DB {
         close(rs);
         close(stmt);
         return id;
-    }
-
-    // retrieves the app based on the passed id
-    public JSONArray selectAppFromId(Integer id) throws SQLException {
-        return getJaByQuery(String.format("SELECT * FROM apps WHERE id = %s", id));
     }
 
     private Integer printAppId(ResultSet rs) throws SQLException {
@@ -926,37 +921,12 @@ public class DB {
     }
 
     public JSONObject getAppByName(String name) throws SQLException {
-        String query = String.format("SELECT * FROM apps WHERE appName = '%s'", name);
-        return this.getJoByQuery(query);
-    }
+        String query = "SELECT * FROM apps WHERE appName = ?";
+        PreparedStatement preparedStatement = this.getPreparedStatementFromQuery(query);
 
-    public JSONArray getFeedbackByApp(String app) throws SQLException {
-        String query = String.format("SELECT * FROM feedback WHERE app = '%s'", app);
-        return this.getJaByQuery(query);
-    }
-
-    public JSONArray getFeedback() throws SQLException {
-        String query = "SELECT * FROM feedback";
-        return this.getJaByQuery(query);
-    }
-
-    // feedbacks of specific app
-    public JSONArray getFbOfApp(String name) throws SQLException {
-        Statement stmt;
-        Connection conn = DBConnection.connection();
-        stmt = conn.createStatement();
-
-        PreparedStatement ps = conn.prepareStatement("SELECT * FROM feedback WHERE app = ?");
-        ps.setString(1, name);
-        ResultSet rs = ps.executeQuery();
-
-
-        // Fetch each row from the result set
-        JSONArray jsonArray = printDB(rs);
-
-        close(rs);
-        close(stmt);
-        return jsonArray;
+        preparedStatement.setString(1, name);
+        ResultSet resultSet = preparedStatement.executeQuery();
+        return this.getJSONObjectByResultSet(resultSet);
     }
 
     public JSONObject login(Map<String, String> json) throws Exception {
