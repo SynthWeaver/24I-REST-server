@@ -735,7 +735,6 @@ public class DB {
             DecimalFormat df2 = new DecimalFormat("#.00");
 
             JSONObject jsonOb = new JSONObject();
-            jsonOb.put("app", request);
             jsonOb.put("question", cur);
             jsonOb.put("avg", df2.format(avg));
             jsonArray.add(jsonOb);
@@ -754,6 +753,8 @@ public class DB {
         double sumD;
         double countD;
         ArrayList<String> apps = new ArrayList<String>();
+        ArrayList<String> questions = new ArrayList<String>();
+
         String curquest ="", appname = "";
 
         Connection conn = DBConnection.connection();
@@ -762,23 +763,21 @@ public class DB {
         //for final data
         JSONArray jsonArray = new JSONArray();
 
-        // Get app names where rating is not null (= the ones with questions)
-        ResultSet rs = stmt.executeQuery("SELECT DISTINCT app FROM app_feedback WHERE stars IS NOT NULL");
+        // Get different questions where rating is not null (= the ones with questions)
+        ResultSet rs = stmt.executeQuery("SELECT DISTINCT star_question FROM app_feedback WHERE star_question IS NOT NULL");
         while (rs.next()) {
-            apps.add(rs.getString("app"));
+            questions.add(rs.getString("star_question"));
         }
 
-        // For every app, create an arraylist for questions, select distinct questions,
-        // put them in the arraylist, check the stars for each question
-        for (int i = 0; i<apps.size(); i++){
-            appname = apps.get(i);
-            System.out.println(appname);
-            ArrayList<String> questions = new ArrayList<String>();
+        // For every question, create an arraylist for apps, select distinct apps,
+        // put them in the arraylist, check the stars for each app
+        for (int i = 0; i<questions.size(); i++){
+            curquest = questions.get(i);
+            System.out.println(curquest);
 
-
-            // For every app, see how many different questions, put them in a list
-            PreparedStatement ps = conn.prepareStatement("SELECT DISTINCT star_question FROM app_feedback WHERE app = ? ORDER BY star_question");
-            ps.setString(1, appname);
+            // For every question, see how many different apps, put them in a list
+            PreparedStatement ps = conn.prepareStatement("SELECT DISTINCT app FROM app_feedback WHERE star_question = ? ORDER BY app");
+            ps.setString(1, curquest);
             rs = ps.executeQuery();
 
             while (rs.next()) {
@@ -943,7 +942,7 @@ public class DB {
         Connection conn = DBConnection.connection();
         stmt = conn.createStatement();
 
-        PreparedStatement ps = conn.prepareStatement("SELECT * FROM feedback WHERE app = ?");
+        PreparedStatement ps = conn.prepareStatement("SELECT * FROM app_feedback WHERE app = ?");
         ps.setString(1, name);
         ResultSet rs = ps.executeQuery();
 
