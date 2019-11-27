@@ -5,6 +5,7 @@ import objects.Password;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
+import javax.xml.transform.Result;
 import java.sql.*;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -737,6 +738,7 @@ public class DB {
             DecimalFormat df2 = new DecimalFormat("#.00");
 
             JSONObject jsonOb = new JSONObject();
+            jsonOb.put("app", request);
             jsonOb.put("question", cur);
             jsonOb.put("avg", df2.format(avg));
             jsonArray.add(jsonOb);
@@ -746,6 +748,101 @@ public class DB {
         close(stmt);
         return jsonArray;
     }
+
+    // average stars per question per app
+    public JSONArray avgStarPerQuestion() throws SQLException {
+        int starsum = 0, max = 0, quesCount = 0;
+        double avg = 0;
+
+        double sumD;
+        double countD;
+        ArrayList<String> apps = new ArrayList<String>();
+        String curquest ="", appname = "";
+
+        Connection conn = DBConnection.connection();
+        Statement stmt = conn.createStatement();
+
+        //for final data
+        JSONArray jsonArray = new JSONArray();
+
+        // Get app names where rating is not null (= the ones with questions)
+        ResultSet rs = stmt.executeQuery("SELECT DISTINCT app FROM app_feedback WHERE stars IS NOT NULL");
+        while (rs.next()) {
+            apps.add(rs.getString("app"));
+        }
+
+        // For every app, create an arraylist for questions, select distinct questions,
+        // put them in the arraylist, check the stars for each question
+        for (int i = 0; i<apps.size(); i++){
+            appname = apps.get(i);
+            System.out.println(appname);
+            ArrayList<String> questions = new ArrayList<String>();
+
+
+            // For every app, see how many different questions, put them in a list
+            PreparedStatement ps = conn.prepareStatement("SELECT DISTINCT star_question FROM app_feedback WHERE app = ? ORDER BY star_question");
+            ps.setString(1, appname);
+            rs = ps.executeQuery();
+
+            while (rs.next()) {
+                if (!"".equals(rs.getString("star_question"))) {
+                    questions.add(rs.getString("star_question"));
+                    max++;
+                }
+            }
+
+            System.out.println(questions);
+
+            // For every question in the array list (for current app), check the stars, add them to variable sum
+            for (int j = 0; j < max; j++){
+                curquest = questions.get(j);
+                System.out.println(curquest);
+                ps = conn.prepareStatement("SELECT stars AS num FROM app_feedback WHERE star_question = ? AND app = ?");
+                ps.setString(1, curquest);
+                ps.setString(2, appname);
+
+                rs = ps.executeQuery();
+
+                while (rs.next()) {
+                    starsum += (rs.getInt("num"));
+                }
+
+                // Get line count for this app and question
+                ps = conn.prepareStatement("SELECT COUNT(*) AS cn FROM app_feedback WHERE star_question = ? AND app = ? AND stars IS NOT NULL;");
+                ps.setString(1, curquest);
+                ps.setString(2, appname);
+                rs = ps.executeQuery();
+
+                while (rs.next()) {
+                    quesCount = (rs.getInt("cn"));
+                }
+
+                //calculate average
+                sumD = starsum;
+                countD = quesCount;
+                avg = sumD/countD;
+
+                // for formatting average
+                DecimalFormat df2 = new DecimalFormat("#.00");
+
+                //put data in a JSONObject
+                JSONObject jsonOb = new JSONObject();
+                jsonOb.put("app", appname);
+                jsonOb.put("question", curquest);
+                jsonOb.put("avg", df2.format(avg));
+                jsonArray.add(jsonOb);
+
+                // empty variables for next round
+                starsum = 0;
+                max = 0;
+            }
+        }
+
+        close(rs);
+        close(stmt);
+        return jsonArray;
+    }
+
 
     //
     // FOR SPECIFIC APP INFO
