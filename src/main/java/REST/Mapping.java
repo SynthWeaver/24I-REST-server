@@ -48,8 +48,7 @@ public class Mapping {
         return db.selectAppFromId(id);
     }
 
-    // template for /post:
-    // {"smiley" : 7, "feedback" : "Nice UI", "category" : "feedback", "device" : "Pixel", "os" : "Android", "app" : "SomeApp", "image" : ""}
+    // POST method
     @ResponseBody
     @RequestMapping(value = "/post", method = RequestMethod.POST, consumes = "text/plain")
     public void post(@RequestBody String json) throws ParseException, SQLException {
@@ -170,14 +169,15 @@ public class Mapping {
         }
     }
 
+    // CHECK how is this different from feedbacksPerYear
     @ResponseBody
     @GetMapping("/get/feedbacks")
     public JSONArray timeRange() throws SQLException, Exception {
         return db.feedbacksPerMonth();
     }
 
-
-    // Sort by device: /get/device/asc or /get/device/desc
+// CHECK probably not needed
+/*    // Sort by device: /get/device/asc or /get/device/desc
     @ResponseBody
     @GetMapping("/get/device/{request}")
     public JSONArray device(@PathVariable("request") String request) throws SQLException, Exception {
@@ -187,7 +187,7 @@ public class Mapping {
         else {
             throw new Exception();
         }
-    }
+    }*/
 
     // Sort by app: /get/app/asc or /get/app/desc
     @ResponseBody
@@ -201,6 +201,7 @@ public class Mapping {
         }
     }
 
+    // CHECK if necessary
     // Get smileys for example with /get/smiley/1 (1-10)
     // or sort /get/smiley/asc or /get/smiley/desc
     @ResponseBody
