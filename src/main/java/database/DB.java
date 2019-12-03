@@ -1,5 +1,6 @@
 package database;
 
+import com.mysql.cj.xdevapi.SqlDataResult;
 import objects.DateTime;
 import objects.Password;
 import org.json.simple.JSONArray;
@@ -79,30 +80,51 @@ public class DB {
         stmt = conn.createStatement();
         //In frontend feedback moet het gemaakte jsonobject aangepast worden zodat er onder andere een feedback_id aangemaakt wordt
 //        String feedback_id = jsonObject.get("feedback_id").toString();
-        String app = jsonObject.get("app").toString();
-        String feature = jsonObject.get("feature").toString();
-        String rating = jsonObject.get("rating").toString();
 
         String stars = jsonObject.get("stars").toString();
-        String feedback = jsonObject.get("feedback").toString();
-        String category = jsonObject.get("category").toString();
         String starQuestion = jsonObject.get("starQuestion").toString();
-        String time = DateTime.now();
-        String device = jsonObject.get("device").toString();
-        String os = jsonObject.get("os").toString();
 
-        String image = jsonObject.get("image").toString();
+        int feedbackId = selectLastFeedback();
+
+        String questionQuery = String.format("INSERT INTO 1WKvtfAKZ1.question_feedback" +
+                "(question, f_id, stars)" +
+                "VALUES " +
+                "('%s', '%s', '%s');",
+                starQuestion, feedbackId, stars);
+        stmt.executeUpdate(questionQuery);
+        close(stmt);
+    }
+
+    public void insertFeedback(JSONObject jsonObject) throws SQLException {
+        Statement stmt;
+        Connection conn = DBConnection.connection();
+        stmt = conn.createStatement();
+        //In frontend feedback moet het gemaakte jsonobject aangepast worden zodat er onder andere een feedback_id aangemaakt wordt
+//        String feedback_id = jsonObject.get("feedback_id").toString();
+        String app = (jsonObject.get("app") != null ? jsonObject.get("app").toString() : null);
+        String feature = (jsonObject.get("feature") != null ? jsonObject.get("feature").toString() : null);
+        String rating = (jsonObject.get("rating") != null ? jsonObject.get("rating").toString() : null);
+
+        String feedback = (jsonObject.get("feedback") != null ? jsonObject.get("feedback").toString() : null);
+        String category = (jsonObject.get("category") != null ? jsonObject.get("category").toString() : null);
+        String time = DateTime.now();
+        String device = (jsonObject.get("device") != null ? jsonObject.get("device").toString() : null);
+        String os = (jsonObject.get("os") != null ? jsonObject.get("os").toString() : null);
+
+        String image = (jsonObject.get("image") != null ? jsonObject.get("image").toString() : null);
 
         String query = String.format("INSERT INTO 1WKvtfAKZ1.app_feedback" +
-                        "(feedback, category, time, device,os,app,image,stars,features,rating,star_question)" +
+                        "(feedback, category, time, device,os,app,image,features,rating)" +
                         "VALUES" +
-                        "('%s','%s','%s','%s','%s','%s','%s','%s','%s','%s', '%s');",
-                 feedback, category, time, device, os, app, image, stars, feature, rating, starQuestion
+                        "('%s','%s','%s','%s','%s','%s','%s','%s','%s');",
+                 feedback, category, time, device, os, app, image, feature, rating
         );
 
         stmt.executeUpdate(query);
+
         close(stmt);
     }
+
 
     //const { appName, logoURL, template, password,}
     public void insertAccount(JSONObject jsonObject) throws SQLException {
@@ -221,7 +243,7 @@ public class DB {
         return jsonArray;
     }
 
-    public Integer selectAppIdFromAppName(String appName) throws SQLException {
+    private Integer selectAppIdFromAppName(String appName) throws SQLException {
         Statement stmt;
         Connection conn = DBConnection.connection();
         stmt = conn.createStatement();
@@ -237,6 +259,22 @@ public class DB {
         return id;
     }
 
+    private Integer selectLastFeedback() throws SQLException {
+        Statement stmt;
+        Connection conn = DBConnection.connection();
+        stmt = conn.createStatement();
+
+        PreparedStatement ps = conn.prepareStatement("SELECT feedback_id FROM 1WKvtfAKZ1.app_feedback ORDER BY feedback_id DESC LIMIT 1");
+
+        ResultSet rs = ps.executeQuery();
+
+        int feedbackId = printFeedbackId(rs);
+        close(rs);
+        close(stmt);
+        return feedbackId;
+
+    }
+
     // retrieves the app based on the passed id
     public JSONArray selectAppFromId(Integer id) throws SQLException {
         return getJaByQuery(String.format("SELECT * FROM apps WHERE id = %s", id));
@@ -248,6 +286,14 @@ public class DB {
             appId = rs.getInt("id");
         }
         return appId;
+    }
+
+    private Integer printFeedbackId(ResultSet rs) throws SQLException {
+        int feedbackId = 0;
+        while (rs.next()) {
+            feedbackId = rs.getInt("feedback_id");
+        }
+        return feedbackId;
     }
 
     public JSONArray selectTemplateConfigByApp(Integer id) throws SQLException {
