@@ -180,11 +180,11 @@ public class Mapping {
         }
     }
 
-    @ResponseBody
-    @GetMapping("/get/feedbacks")
-    public JSONArray timeRange() throws SQLException, Exception {
-        return db.feedbacksPerMonth();
-    }
+//    @ResponseBody
+//    @GetMapping("/get/feedbacks")
+//    public JSONArray timeRange() throws SQLException, Exception {
+//        return db.feedbacksPerMonth();
+//    }
 
 
     // Sort by device: /get/device/asc or /get/device/desc
@@ -281,6 +281,12 @@ public class Mapping {
     public JSONArray osDist() throws SQLException {
         return db.osDist();
 
+    }
+
+    @ResponseBody
+    @GetMapping("/get/feedbacks/year")
+    public JSONArray feedbacksPerYear() throws SQLException, Exception {
+        return db.feedbacksPerYear();
     }
 
 }

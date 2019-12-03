@@ -402,7 +402,7 @@ public class DB {
         Connection conn = DBConnection.connection();
         stmt = conn.createStatement();
 
-        PreparedStatement ps = conn.prepareStatement("SELECT * FROM app_feedback  WHERE id = ?");
+        PreparedStatement ps = conn.prepareStatement("SELECT * FROM app_feedback  WHERE feedback_id = ?");
         ps.setString(1, request);
         ResultSet rs = ps.executeQuery();
 
@@ -429,51 +429,6 @@ public class DB {
         close(rs);
         close(stmt);
         return jsonArray;
-    }
-
-    public JSONArray feedbacksPerMonth() throws SQLException {
-        Statement stmt;
-        Connection conn = DBConnection.connection();
-        stmt = conn.createStatement();
-        ResultSet rs;
-        rs = stmt.executeQuery("SELECT * FROM app_feedback ORDER BY time ASC");
-
-
-        JSONArray jsonArray = printDB(rs);
-        int[] yearlyData = new int[12];
-
-        for (Object o : jsonArray) {
-            JSONObject json = (JSONObject) o;
-            String time = (String) json.get("time");
-            String month = time.substring(5,7);
-            int m = Integer.parseInt(month);
-            switch (m) {
-                case 1:
-                    yearlyData[0] += 1;
-                    break;
-                case 5:
-                    yearlyData[4] += 1;
-                    break;
-                case 9:
-                    yearlyData[8] += 1;
-                    break;
-                case 10:
-                    yearlyData[9] += 1;
-                    break;
-                case 11:
-                    yearlyData[10] += 1;
-                    break;
-            }
-        }
-        close(rs);
-        close(stmt);
-
-        JSONArray result = new JSONArray();
-        for (int i = 0; i < 12; i++) {
-            result.add(yearlyData[i]);
-        }
-
-        return result;
     }
 
     //  Sort by device
@@ -870,7 +825,7 @@ public class DB {
         Statement stmt;
         Connection conn = DBConnection.connection();
         stmt = conn.createStatement();
-        PreparedStatement ps = conn.prepareStatement("DELETE FROM feedback WHERE id = ?");
+        PreparedStatement ps = conn.prepareStatement("DELETE FROM app_feedback WHERE feedback_id = ?");
         ps.setInt(1, request);
         Integer result = ps.executeUpdate();
         close(stmt);
@@ -883,7 +838,7 @@ public class DB {
         Statement stmt;
         Connection conn = DBConnection.connection();
         stmt = conn.createStatement();
-        ResultSet rs = stmt.executeQuery("SELECT DISTINCT os, count(os) AS CountOf FROM feedback Group By os ORDER BY os ASC;");
+        ResultSet rs = stmt.executeQuery("SELECT DISTINCT os, count(os) AS CountOf FROM app_feedback Group By os ORDER BY os ASC;");
         JSONArray jsonArray = new JSONArray();
         while (rs.next()) {
             JSONObject jsonObject = new JSONObject();
@@ -931,12 +886,12 @@ public class DB {
     }
 
     public JSONArray getFeedbackByApp(String app) throws SQLException {
-        String query = String.format("SELECT * FROM feedback WHERE app = '%s'", app);
+        String query = String.format("SELECT * FROM app_feedback WHERE app = '%s'", app);
         return this.getJaByQuery(query);
     }
 
     public JSONArray getFeedback() throws SQLException {
-        String query = "SELECT * FROM feedback";
+        String query = "SELECT * FROM app_feedback";
         return this.getJaByQuery(query);
     }
 
@@ -946,7 +901,7 @@ public class DB {
         Connection conn = DBConnection.connection();
         stmt = conn.createStatement();
 
-        PreparedStatement ps = conn.prepareStatement("SELECT * FROM feedback WHERE app = ?");
+        PreparedStatement ps = conn.prepareStatement("SELECT * FROM app_feedback WHERE app = ?");
         ps.setString(1, name);
         ResultSet rs = ps.executeQuery();
 
@@ -983,4 +938,45 @@ public class DB {
 
         return result;
     }
+
+    public JSONArray feedbacksPerYear() throws SQLException {
+        Statement stmt;
+        Connection conn = DBConnection.connection();
+        stmt = conn.createStatement();
+        ResultSet rs;
+        rs = stmt.executeQuery("SELECT * FROM app_feedback ORDER BY time ASC");
+        JSONArray jsonArray = printDB(rs);
+        int[] yearlyData = new int[12];
+        for (Object o : jsonArray) {
+            JSONObject json = (JSONObject) o;
+            String time = (String) json.get("time");
+            String month = time.substring(5,7);
+            int m = Integer.parseInt(month);
+            switch (m) {
+                case 1:
+                    yearlyData[0] += 1;
+                    break;
+                case 5:
+                    yearlyData[4] += 1;
+                    break;
+                case 9:
+                    yearlyData[8] += 1;
+                    break;
+                case 10:
+                    yearlyData[9] += 1;
+                    break;
+                case 11:
+                    yearlyData[10] += 1;
+                    break;
+            }
+        }
+        close(rs);
+        close(stmt);
+        JSONArray result = new JSONArray();
+        for (int i = 0; i < 12; i++) {
+            result.add(yearlyData[i]);
+        }
+        return result;
+    }
+
 }
