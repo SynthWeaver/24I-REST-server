@@ -127,6 +127,25 @@ public class DB {
     // OTHER QUERIES
     //
 
+    // select all different apps appearing in app_feedback
+    public JSONArray allAppsWithFeedback() throws SQLException {
+        Statement stmt;
+        Connection conn = DBConnection.connection();
+        stmt = conn.createStatement();
+        ResultSet rs = stmt.executeQuery("SELECT DISTINCT app FROM app_feedback");
+
+        // Fetch each row from the result set
+        JSONArray jsonArray = new JSONArray();
+        while (rs.next()){
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("app", rs.getString("app"));
+            jsonArray.add(jsonObject);
+        }
+        close(rs);
+        close(stmt);
+        return jsonArray;
+    }
+
     // select all apps that have questions
     public JSONArray selectAllAppsWithQuestions() throws SQLException {
         Statement stmt;

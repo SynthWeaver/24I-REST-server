@@ -64,6 +64,13 @@ public class Mapping {
 
     // get all apps with questions from DB
     @ResponseBody
+    @GetMapping("/get/appsWithFeedback")
+    public JSONArray allAppsWithFeedback() throws SQLException {
+        return db.allAppsWithFeedback();
+    }
+
+    // get all apps with questions from DB
+    @ResponseBody
     @GetMapping("/get/appsWithQuestions")
     public JSONArray getAppsWithQuestions() throws SQLException {
         return db.selectAllAppsWithQuestions();
