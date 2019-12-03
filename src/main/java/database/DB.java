@@ -1,12 +1,9 @@
 package database;
 
-import com.mysql.cj.protocol.Resultset;
 import objects.DateTime;
 import objects.Password;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
-
-import javax.xml.transform.Result;
 import java.sql.*;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -14,78 +11,121 @@ import java.util.Map;
 
 public class DB {
 
-    //get data from database with query as array
-    private JSONArray getJaByQuery(String query) throws SQLException {
-        Statement stmt;
-        Connection conn = DBConnection.connection();
-        stmt = conn.createStatement();
-
-        PreparedStatement ps = conn.prepareStatement(query);
-
-        ResultSet rs = ps.executeQuery();
-        // Fetch each row from the result set
-        //JSONArray jsonArray = printAppDB(rs);
-
-        JSONArray json = new JSONArray();
-        ResultSetMetaData rsmd = rs.getMetaData();
-        while(rs.next()) {
-            int numColumns = rsmd.getColumnCount();
-            JSONObject obj = new JSONObject();
-            for (int i=1; i<=numColumns; i++) {
-                String column_name = rsmd.getColumnName(i);
-                obj.put(column_name, rs.getObject(column_name));
-            }
-            json.add(obj);
-        }
-
-        close(rs);
-        close(stmt);
-
-        if(json.isEmpty()){
-            throw new RuntimeException("Json is empty");
-        }
-
-        return json;
-    }
-
-
-
     //
     // MAIN QUERIES
     //
 
     // basic select all
-    public JSONArray selectAll() throws SQLException {
-        Statement stmt;
-        Connection conn = DBConnection.connection();
-        stmt = conn.createStatement();
-        ResultSet rs = stmt.executeQuery("SELECT * FROM app_feedback");
-
-        // Fetch each row from the result set
-        JSONArray jsonArray = printDB(rs);
-        close(rs);
-        close(stmt);
-        return jsonArray;
+    public JSONArray getFeedback() throws SQLException {
+        String query = "SELECT * FROM app_feedback";
+        return this.getJaByQuery(query);
     }
 
     // select all apps from DB
     public JSONArray selectAllAps() throws SQLException {
+        return this.getJaByQuery("SELECT * FROM apps");
+    }
+
+    //
+    // POST
+    //
+
+    // For POST
+    // (Category should be either "bugreport", "suggestion" or "feedback")
+    public void insert(JSONObject jsonObject) throws SQLException {
         Statement stmt;
         Connection conn = DBConnection.connection();
         stmt = conn.createStatement();
-        ResultSet rs = stmt.executeQuery("SELECT appName FROM apps ORDER BY appName");
+        //In frontend feedback moet het gemaakte jsonobject aangepast worden zodat er onder andere een feedback_id aangemaakt wordt
+        String app = jsonObject.get("app").toString();
+        String feature = jsonObject.get("feature").toString();
+        String rating = jsonObject.get("rating").toString();
 
-        // Fetch each row from the result set
-        JSONArray jsonArray = new JSONArray();
-        while (rs.next()){
-            JSONObject jsonObject = new JSONObject();
-            jsonObject.put("app", rs.getString("appName"));
-            jsonArray.add(jsonObject);
-        }
-        close(rs);
+        String stars = jsonObject.get("stars").toString();
+        String feedback = jsonObject.get("feedback").toString();
+        String category = jsonObject.get("category").toString();
+        String starQuestion = jsonObject.get("starQuestion").toString();
+        String time = DateTime.now();
+        String device = jsonObject.get("device").toString();
+        String os = jsonObject.get("os").toString();
+
+        String image = jsonObject.get("image").toString();
+
+        String query = String.format("INSERT INTO app_feedback" +
+                        "(feedback, category, time, device, os, app, image, stars, features, rating, star_question)" +
+                        "VALUES" +
+                        "('%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s');",
+                feedback, category, time, device, os, app, image, stars, feature, rating, starQuestion
+        );
+
+        stmt.executeUpdate(query);
         close(stmt);
-        return jsonArray;
     }
+
+    // Adding an app
+    //const { appName, logoURL, template, password,}
+    public void insertAccount(JSONObject jsonObject) throws SQLException {
+        Statement stmt;
+        Connection conn = DBConnection.connection();
+        stmt = conn.createStatement();
+
+        if(jsonObject.isEmpty()){
+            close(stmt);
+            return;
+        }
+
+        String appName = jsonObject.get("appName").toString();
+        String logoURL = jsonObject.get("logoURL").toString();
+        String template = jsonObject.get("template").toString();
+        String password = jsonObject.get("password").toString();
+        String featureConfig = jsonObject.get("featureConfig").toString();
+        String starQuestion = jsonObject.get("starQuestion").toString();
+
+        if(     appName.isEmpty() ||
+                logoURL.isEmpty() ||
+                template.isEmpty() ||
+                password.isEmpty()
+            //featureConfig.isEmpty() ||
+            //starQuestion.isEmpty()
+        ){
+            close(stmt);
+            return;
+        }
+
+        String hashedPassword = null;
+        try {
+            hashedPassword = Password.getSaltedHash(password);
+        } catch (Exception e) {
+            close(stmt);
+            e.printStackTrace();
+        }
+
+        String appTableQuery = String.format("INSERT IGNORE INTO feedbacks.apps" +
+
+                        "(appName,logoURL,template,password)" +
+                        "VALUES" +
+                        "('%s','%s','%s','%s');",
+                appName, logoURL, template, hashedPassword
+        );
+
+        stmt.executeUpdate(appTableQuery);
+
+        int appId = selectAppIdFromAppName(appName);
+
+        String configTableQuery = String.format("INSERT INTO feedbacks.TemplateConfig" +
+                        "(Template, FeatureConfig, StarQuestion, App)" +
+                        "VALUES" +
+                        "('%s', '%s', '%s', '%s')",
+                template, featureConfig, starQuestion, appId
+        );
+
+        stmt.executeUpdate(configTableQuery);
+        close(stmt);
+    }
+
+    //
+    // OTHER QUERIES
+    //
 
     // select all apps that have questions
     public JSONArray selectAllAppsWithQuestions() throws SQLException {
@@ -106,155 +146,14 @@ public class DB {
         return jsonArray;
     }
 
-
-    // For POST method
-    // (Category should be either "bugreport", "suggestion" or "feedback")
-    public void insert(JSONObject jsonObject) throws SQLException {
-        Statement stmt;
-        Connection conn = DBConnection.connection();
-        stmt = conn.createStatement();
-        //In frontend feedback moet het gemaakte jsonobject aangepast worden zodat er onder andere een feedback_id aangemaakt wordt
-//        String feedback_id = jsonObject.get("feedback_id").toString();
-        String app = jsonObject.get("app").toString();
-        String feature = jsonObject.get("feature").toString();
-        String rating = jsonObject.get("rating").toString();
-
-        String stars = jsonObject.get("stars").toString();
-        String feedback = jsonObject.get("feedback").toString();
-        String category = jsonObject.get("category").toString();
-        String starQuestion = jsonObject.get("starQuestion").toString();
-        String time = DateTime.now();
-        String device = jsonObject.get("device").toString();
-        String os = jsonObject.get("os").toString();
-
-        String image = jsonObject.get("image").toString();
-
-        String query = String.format("INSERT INTO feedbacks.app_feedback" +
-                        "(feedback, category, time, device, os, app, image, stars, features, rating, star_question)" +
-                        "VALUES" +
-                        "('%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s');",
-                feedback, category, time, device, os, app, image, stars, feature, rating, starQuestion
-        );
-
-        stmt.executeUpdate(query);
-        close(stmt);
-    }
-
-
-    //const { appName, logoURL, template, password,}
-    public void insertAccount(JSONObject jsonObject) throws SQLException {
-        Statement stmt;
-        Connection conn = DBConnection.connection();
-        stmt = conn.createStatement();
-
-        if(jsonObject.isEmpty()){
-            return;
-        }
-
-        String appName = jsonObject.get("appName").toString();
-        String logoURL = jsonObject.get("logoURL").toString();
-        String template = jsonObject.get("template").toString();
-        String password = jsonObject.get("password").toString();
-
-        if(     appName.isEmpty() ||
-                logoURL.isEmpty() ||
-                template.isEmpty() ||
-                password.isEmpty()
-        ){
-            return;
-        }
-
-
-        String hashedPassword = null;
-        try {
-            hashedPassword = Password.getSaltedHash(password);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        String query = String.format("INSERT INTO feedbacks.apps" +
-                        "(appName,logoURL,template,password)" +
-                        "VALUES" +
-                        "('%s','%s','%s','%s');",
-                appName, logoURL, template, hashedPassword
-        );
-
-        stmt.executeUpdate(query);
-        close(stmt);
-    }
-
-    // (to be used by the queries), for putting JSONObjects into the JSONArray
-    private JSONArray printDB(ResultSet rs) throws SQLException{
-        JSONArray jsonArray = new JSONArray();
-        ResultSetMetaData rsmd = rs.getMetaData();
-        //int columnsNumber = rsmd.getColumnCount();
-        while (rs.next()) {
-            JSONObject jsonObject = new JSONObject();
-            jsonObject.put("id", rs.getInt("feedback_id"));
-            jsonObject.put("feedback", rs.getString("feedback"));
-            jsonObject.put("category", rs.getString("category"));
-            jsonObject.put("time", rs.getString("time"));
-            jsonObject.put("device", rs.getString("device"));
-            jsonObject.put("os", rs.getString("os"));
-            jsonObject.put("app", rs.getString("app"));
-            jsonObject.put("image", rs.getString("image"));
-            jsonObject.put("feature", rs.getString("features"));
-            jsonObject.put("stars", rs.getString("stars"));
-            jsonObject.put("rating", rs.getString("rating"));
-            jsonObject.put("starQuestion", rs.getString("star_question"));
-
-            jsonArray.add(jsonObject);
-        }
-        return jsonArray;
-    }
-
-    private JSONArray printAppDB(ResultSet rs) throws SQLException {
-        JSONArray jsonArray = new JSONArray();
-        while (rs.next()) {
-            JSONObject jsonObject = new JSONObject();
-            jsonObject.put("id", rs.getInt("id"));
-            jsonObject.put("appName", rs.getString("appName"));
-            jsonObject.put("logoURL", rs.getString("logoURL"));
-            jsonObject.put("template", rs.getString("template"));
-            jsonObject.put("password", rs.getString("password"));
-
-            jsonArray.add(jsonObject);
-        }
-        return jsonArray;
-    }
-
-    private JSONArray printTemplateDB(ResultSet rs) throws SQLException {
-        JSONArray jsonArray = new JSONArray();
-        while(rs.next()) {
-            JSONObject jsonObject = new JSONObject();
-            jsonObject.put("id", rs.getInt("Id"));
-            jsonObject.put("template", rs.getString("Template"));
-            jsonObject.put("featureConfig", rs.getString("FeatureConfig"));
-            jsonObject.put("starQuestion", rs.getString("StarQuestion"));
-            jsonObject.put("app", rs.getInt("App"));
-            jsonObject.put("appName", rs.getString("appName"));
-
-            jsonArray.add(jsonObject);
-        }
-        return jsonArray;
-    }
-
     // retrieves the app based on the passed id
     public JSONArray selectAppFromId(Integer id) throws SQLException {
-        Statement stmt;
-        Connection conn = DBConnection.connection();
-        stmt = conn.createStatement();
+        return getJaByQuery(String.format("SELECT * FROM apps WHERE id = %s", id));
+    }
 
-        PreparedStatement ps = conn.prepareStatement("SELECT * FROM apps WHERE id = ?");
-        ps.setInt(1, id);
-
-        ResultSet rs = ps.executeQuery();
-        // Fetch each row from the result set
-        JSONArray jsonArray = printAppDB(rs);
-        close(rs);
-        close(stmt);
-        return jsonArray;
-
+    public JSONObject getAppByName(String name) throws SQLException {
+        String query = String.format("SELECT * FROM apps WHERE appName = '%s'", name);
+        return this.getJoByQuery(query);
     }
 
     public JSONArray selectTemplateConfigByApp(Integer id) throws SQLException {
@@ -273,296 +172,37 @@ public class DB {
         return jsonArray;
     }
 
-    //
-    // OTHER QUERIES
-    //
-
-    // Line count of whole database
-    public JSONArray feedbackCount() throws SQLException {
-
-        Statement stmt;
-        Connection conn = DBConnection.connection();
-        stmt = conn.createStatement();
-        ResultSet rs = stmt.executeQuery("SELECT COUNT(*) AS lc FROM app_feedback");
-        JSONArray jsonArray = new JSONArray();
-        while (rs.next()) {
-            JSONObject jsonObject = new JSONObject();
-            jsonObject.put("feedbackAmount", rs.getInt("lc"));
-
-            jsonArray.add(jsonObject);
-        }
-        close(rs);
-        close(stmt);
-        return jsonArray;
+    // feedbacks of specific app
+    public JSONArray getFbOfApp(String app) throws SQLException {
+        String query = String.format("SELECT * FROM app_feedback WHERE app = '%s'", app);
+        return this.getJaByQuery(query);
     }
 
-    // Amount of all smileys
-    public JSONArray smileyCountAll() throws SQLException {
+    public JSONObject login(Map<String, String> json) throws Exception {
+        String appName = json.get("name");
+        String password = json.get("password");
 
-        Statement stmt;
-        PreparedStatement ps;
-        Connection conn = DBConnection.connection();
-        stmt = conn.createStatement();
-/*        ResultSet rs = stmt.executeQuery("SELECT DISTINCT rating, count(rating) AS CountOf FROM app_feedback WHERE rating IS NOT NULL AND rating <> \"\" Group By rating ORDER BY CountOf, rating ASC;");
-        JSONArray jsonArray = new JSONArray();
-        while (rs.next()) {
-            JSONObject jsonObject = new JSONObject();
-            jsonObject.put("Smileyrange", rs.getInt("CountOf"));
-            jsonArray.add(jsonObject);
-        }*/
+        JSONObject result = new JSONObject();
 
-        JSONArray jsonArray = new JSONArray();
-
-        for (int i = 1; i<=10; i++){
-            ps = conn.prepareStatement("SELECT COUNT(*) AS sc FROM app_feedback WHERE rating = ?");
-            ps.setInt(1, i);
-            ResultSet rs = ps.executeQuery();
-
-            while (rs.next()) {
-                JSONObject jsonObject = new JSONObject();
-                jsonObject.put("SmileyRange "+i, rs.getInt("sc"));
-
-                jsonArray.add(jsonObject);
-            }
-            close(rs);
-        }
-        close(stmt);
-        return jsonArray;
-    }
-
-
-    // Line count of specific os
-    public JSONArray osCount(String request) throws SQLException {
-
-        Statement stmt;
-        Connection conn = DBConnection.connection();
-        stmt = conn.createStatement();
-
-        PreparedStatement ps = conn.prepareStatement("SELECT COUNT(*) AS lc FROM app_feedback WHERE os LIKE ?");
-        ps.setString(1, request);
-        ResultSet rs = ps.executeQuery();
-
-        JSONArray jsonArray = new JSONArray();
-        while (rs.next()) {
-            JSONObject jsonObject = new JSONObject();
-            jsonObject.put( request, rs.getInt("lc"));
-
-            jsonArray.add(jsonObject);
-        }
-        close(rs);
-        close(stmt);
-        return jsonArray;
-    }
-
-    // Line count of 2 specific os's
-    public JSONArray osCountTwo(String os1, String os2) throws SQLException {
-        Statement stmt;
-        Connection conn = DBConnection.connection();
-        stmt = conn.createStatement();
-
-        PreparedStatement ps = conn.prepareStatement("SELECT COUNT(*) AS lc FROM app_feedback WHERE os LIKE ?");
-        PreparedStatement ps2 = conn.prepareStatement("SELECT COUNT(*) AS lc2 FROM app_feedback WHERE os LIKE ?");
-        ps.setString(1, "%" + os1 + "%");
-        ps2.setString(1, "%" + os2 + "%");
-        ResultSet rs = ps.executeQuery();
-
-        JSONObject jsonObject = new JSONObject();
-
-        JSONArray jsonArray = new JSONArray();
-
-        while (rs.next()) {
-            jsonObject.put(os1, rs.getInt("lc"));
+        if(appName.isEmpty() || password.isEmpty()){
+            result.put("result", false);
+            return  result;
         }
 
-        rs = ps2.executeQuery();
-        while (rs.next()) {
-            jsonObject.put(os2, rs.getInt("lc2"));
-        }
-        jsonArray.add(jsonObject);
-        close(rs);
-        close(stmt);
-        return jsonArray;
-    }
+        JSONObject app = this.getAppByName(appName);
+        boolean loginResult;
 
-    // Line count of desired smiley value (1-10)
-    public JSONArray smileyCount(String request) throws SQLException {
-        Statement stmt;
-        Connection conn = DBConnection.connection();
-        stmt = conn.createStatement();
-
-        PreparedStatement ps = conn.prepareStatement("SELECT COUNT(*) AS lc FROM app_feedback WHERE rating = ?");
-        ps.setString(1, request);
-        ResultSet rs = ps.executeQuery();
-
-        JSONArray jsonArray = new JSONArray();
-        while (rs.next()) {
-            JSONObject jsonObject = new JSONObject();
-            jsonObject.put("line count for smiley "+request, rs.getInt("lc"));
-
-            jsonArray.add(jsonObject);
-        }
-        close(rs);
-        close(stmt);
-        return jsonArray;
-    }
-
-    // Specific Id
-    public JSONArray theId(String request) throws SQLException {
-        Statement stmt;
-        Connection conn = DBConnection.connection();
-        stmt = conn.createStatement();
-
-        PreparedStatement ps = conn.prepareStatement("SELECT * FROM app_feedback  WHERE feedback_id = ?");
-        ps.setString(1, request);
-        ResultSet rs = ps.executeQuery();
-
-        JSONArray jsonArray = printDB(rs);
-        close(rs);
-        close(stmt);
-        return jsonArray;
-    }
-
-    // Sort by time
-    public JSONArray time(String request) throws SQLException {
-        Statement stmt;
-        Connection conn = DBConnection.connection();
-        stmt = conn.createStatement();
-        ResultSet rs;
-
-        if (request.equals("asc")) {
-            rs = stmt.executeQuery("SELECT * FROM app_feedback ORDER BY time ASC");
-        } else{
-            rs = stmt.executeQuery("SELECT * FROM app_feedback ORDER BY time DESC");
+        if(app != null){
+            loginResult = Password.check(password, (String) app.get("password"));
+        }else{
+            loginResult = false;
         }
 
-        JSONArray jsonArray = printDB(rs);
-        close(rs);
-        close(stmt);
-        return jsonArray;
-    }
-
-    // CHECK: How does this work? Do we need both this and feedbacksPerYear?
-    public JSONArray feedbacksPerMonth() throws SQLException {
-        Statement stmt;
-        Connection conn = DBConnection.connection();
-        stmt = conn.createStatement();
-        ResultSet rs;
-        rs = stmt.executeQuery("SELECT * FROM app_feedback ORDER BY time ASC");
-
-
-        JSONArray jsonArray = printDB(rs);
-        int[] yearlyData = new int[12];
-
-        for (Object o : jsonArray) {
-            JSONObject json = (JSONObject) o;
-            String time = (String) json.get("time");
-            String month = time.substring(5,7);
-            int m = Integer.parseInt(month);
-            switch (m) {
-                case 1:
-                    yearlyData[0] += 1;
-                    break;
-                case 5:
-                    yearlyData[4] += 1;
-                    break;
-                case 9:
-                    yearlyData[8] += 1;
-                    break;
-                case 10:
-                    yearlyData[9] += 1;
-                    break;
-                case 11:
-                    yearlyData[10] += 1;
-                    break;
-            }
-        }
-        close(rs);
-        close(stmt);
-
-        JSONArray result = new JSONArray();
-        for (int i = 0; i < 12; i++) {
-            result.add(yearlyData[i]);
-        }
+        result.put("result", loginResult);
 
         return result;
+
     }
-
-    // CHECK probably not needed
-    /*//  Sort by device
-    public JSONArray device(String request) throws SQLException {
-        Statement stmt;
-        Connection conn = DBConnection.connection();
-        stmt = conn.createStatement();
-        ResultSet rs;
-
-        if (request.equals("asc")) {
-            rs = stmt.executeQuery("SELECT * FROM app_feedback ORDER BY device ASC");
-        } else{
-            rs = stmt.executeQuery("SELECT * FROM app_feedback ORDER BY device DESC");
-        }
-
-        JSONArray jsonArray = printDB(rs);
-        close(rs);
-        close(stmt);
-        return jsonArray;
-    }*/
-
-    // CHECK IF NECESSARY
-    //  Sort by app
-    public JSONArray app(String request) throws SQLException {
-        Statement stmt;
-        Connection conn = DBConnection.connection();
-        stmt = conn.createStatement();
-        ResultSet rs;
-
-        if (request.equals("asc")) {
-            rs = stmt.executeQuery("SELECT * FROM app_feedback ORDER BY app ASC");
-        } else{
-            rs = stmt.executeQuery("SELECT * FROM app_feedback ORDER BY app DESC");
-        }
-
-        JSONArray jsonArray = printDB(rs);
-        close(rs);
-        close(stmt);
-        return jsonArray;
-    }
-
-    // CHECK IF NECESSARY
-    // Sort smileys by ascending or descending OR see only feedbacks with a specific smiley value
-    public JSONArray smiley(String request) throws SQLException {
-        Statement stmt;
-        Connection conn = DBConnection.connection();
-
-        stmt = conn.createStatement();
-
-        ResultSet rs;
-
-        if (request.equals("asc")){
-            rs = stmt.executeQuery("SELECT * FROM app_feedback ORDER BY rating ASC");
-
-            JSONArray jsonArray = printDB(rs);
-            return jsonArray;
-
-        } else if (request.equals("desc")){
-            rs = stmt.executeQuery("SELECT * FROM app_feedback ORDER BY rating DESC");
-
-            JSONArray jsonArray = printDB(rs);
-
-            return jsonArray;
-
-        } else {
-            PreparedStatement ps = conn.prepareStatement("SELECT * FROM app_feedback WHERE rating = ?");
-            ps.setString(1, request);
-            rs = ps.executeQuery();
-
-            JSONArray jsonArray = printDB(rs);
-
-            close(rs);
-            close(stmt);
-            return jsonArray;
-        }
-    }
-
 
     // Category distribution
     public JSONArray catDistr() throws SQLException {
@@ -598,6 +238,149 @@ public class DB {
         return jsonArray;
     }
 
+    // Amount of all smileys
+    public JSONArray smileyCountAll() throws SQLException {
+
+        Statement stmt;
+        PreparedStatement ps;
+        Connection conn = DBConnection.connection();
+        stmt = conn.createStatement();
+
+        JSONArray jsonArray = new JSONArray();
+
+        for (int i = 1; i<=10; i++){
+            ps = conn.prepareStatement("SELECT COUNT(*) AS sc FROM app_feedback WHERE rating = ?");
+            ps.setInt(1, i);
+            ResultSet rs = ps.executeQuery();
+
+            while (rs.next()) {
+                JSONObject jsonObject = new JSONObject();
+                jsonObject.put("SmileyRange", rs.getInt("sc"));
+
+                jsonArray.add(jsonObject);
+            }
+            close(rs);
+        }
+        close(stmt);
+        return jsonArray;
+    }
+
+    public JSONArray feedbacksPerYear() throws SQLException {
+        Statement stmt;
+        Connection conn = DBConnection.connection();
+        stmt = conn.createStatement();
+        ResultSet rs;
+        rs = stmt.executeQuery("SELECT * FROM app_feedback ORDER BY time ASC");
+        JSONArray jsonArray = printDB(rs);
+        int[] yearlyData = new int[12];
+        for (Object o : jsonArray) {
+            JSONObject json = (JSONObject) o;
+            String time = (String) json.get("time");
+            String month = time.substring(5,7);
+            int m = Integer.parseInt(month);
+            switch (m) {
+                case 1:
+                    yearlyData[0] += 1;
+                    break;
+                case 5:
+                    yearlyData[4] += 1;
+                    break;
+                case 9:
+                    yearlyData[8] += 1;
+                    break;
+                case 10:
+                    yearlyData[9] += 1;
+                    break;
+                case 11:
+                    yearlyData[10] += 1;
+                    break;
+            }
+        }
+        close(rs);
+        close(stmt);
+        JSONArray result = new JSONArray();
+        for (int i = 0; i < 12; i++) {
+            result.add(yearlyData[i]);
+        }
+        return result;
+    }
+
+    // Line count of 2 specific os's
+    public JSONArray osCountTwo(String os1, String os2) throws SQLException {
+        Statement stmt;
+        Connection conn = DBConnection.connection();
+        stmt = conn.createStatement();
+
+        PreparedStatement ps = conn.prepareStatement("SELECT COUNT(*) AS lc FROM app_feedback WHERE os LIKE ?");
+        PreparedStatement ps2 = conn.prepareStatement("SELECT COUNT(*) AS lc2 FROM app_feedback WHERE os LIKE ?");
+        ps.setString(1, "%" + os1 + "%");
+        ps2.setString(1, "%" + os2 + "%");
+        ResultSet rs = ps.executeQuery();
+
+        JSONObject jsonObject = new JSONObject();
+
+        JSONArray jsonArray = new JSONArray();
+
+        while (rs.next()) {
+            jsonObject.put(os1, rs.getInt("lc"));
+        }
+
+        rs = ps2.executeQuery();
+        while (rs.next()) {
+            jsonObject.put(os2, rs.getInt("lc2"));
+        }
+        jsonArray.add(jsonObject);
+        close(rs);
+        close(stmt);
+        return jsonArray;
+    }
+
+    // Feedback with a specific Id
+    public JSONArray theId(String request) throws SQLException {
+        Statement stmt;
+        Connection conn = DBConnection.connection();
+        stmt = conn.createStatement();
+
+        PreparedStatement ps = conn.prepareStatement("SELECT * FROM app_feedback  WHERE feedback_id = ?");
+        ps.setString(1, request);
+        ResultSet rs = ps.executeQuery();
+
+        JSONArray jsonArray = printDB(rs);
+        close(rs);
+        close(stmt);
+        return jsonArray;
+    }
+
+    // Sort by time
+    public JSONArray time(String request) throws SQLException {
+        Statement stmt;
+        Connection conn = DBConnection.connection();
+        stmt = conn.createStatement();
+        ResultSet rs;
+
+        if (request.equals("asc")) {
+            rs = stmt.executeQuery("SELECT * FROM app_feedback ORDER BY time ASC");
+        } else{
+            rs = stmt.executeQuery("SELECT * FROM app_feedback ORDER BY time DESC");
+        }
+
+        JSONArray jsonArray = printDB(rs);
+        close(rs);
+        close(stmt);
+        return jsonArray;
+    }
+
+    // Delete a feedback
+    public Integer deleteFeedback(Integer request) throws SQLException {
+        Statement stmt;
+        Connection conn = DBConnection.connection();
+        stmt = conn.createStatement();
+        PreparedStatement ps = conn.prepareStatement("DELETE FROM app_feedback WHERE feedback_id = ?");
+        ps.setInt(1, request);
+        Integer result = ps.executeUpdate();
+        close(stmt);
+        return result;
+    }
 
     // average grade per app
     public JSONArray avgPerApp() throws SQLException {
@@ -672,7 +455,6 @@ public class DB {
         ArrayList<String> questions = new ArrayList<String>();
         String cur;
 
-
         JSONArray jsonArray = new JSONArray();
 
         Statement stmt;
@@ -734,163 +516,114 @@ public class DB {
     }
 
     //
-    // FOR SPECIFIC APP INFO
+    // TO BE USED BY OTHER METHODS
     //
 
-    // basic select all for a specific app
-    public JSONArray selectAllAPP(String request) throws SQLException {
-        Statement stmt;
-        Connection conn = DBConnection.connection();
-        stmt = conn.createStatement();
-        PreparedStatement ps = conn.prepareStatement("SELECT * FROM app_feedback WHERE app = ?");
-        ps.setString(1, request);
-        ResultSet rs = ps.executeQuery();
-
-        // Fetch each row from the result set
-        JSONArray jsonArray = printDB(rs);
-        close(rs);
-        close(stmt);
-        return jsonArray;
-    }
-
-
-    // Delete a feedback
-    public Integer deleteFeedback(Integer request) throws SQLException {
-        Statement stmt;
-        Connection conn = DBConnection.connection();
-        stmt = conn.createStatement();
-        PreparedStatement ps = conn.prepareStatement("DELETE FROM app_feedback WHERE feedback_id = ?");
-        ps.setInt(1, request);
-        Integer result = ps.executeUpdate();
-        close(stmt);
-        return result;
-    }
-
-    // OS Distribution
-    public JSONArray osDist() throws SQLException {
-
-        Statement stmt;
-        Connection conn = DBConnection.connection();
-        stmt = conn.createStatement();
-        ResultSet rs = stmt.executeQuery("SELECT DISTINCT os, count(os) AS CountOf FROM app_feedback Group By os ORDER BY os ASC;");
-        JSONArray jsonArray = new JSONArray();
-        while (rs.next()) {
-            JSONObject jsonObject = new JSONObject();
-            jsonObject.put("os", rs.getString("os"));
-            jsonObject.put("count", rs.getInt("CountOf"));
-
-            jsonArray.add(jsonObject);
-        }
-        close(rs);
-        close(stmt);
-        return jsonArray;
-    }
-
-
-    public JSONObject getAppByName(String name) throws SQLException {
+    //get data from database with query as array
+    private JSONArray getJaByQuery(String query) throws SQLException {
         Statement stmt;
         Connection conn = DBConnection.connection();
         stmt = conn.createStatement();
 
-        PreparedStatement ps = conn.prepareStatement(String.format("SELECT * FROM apps WHERE appName = '%s'", name));
+        PreparedStatement ps = conn.prepareStatement(query);
 
         ResultSet rs = ps.executeQuery();
         // Fetch each row from the result set
-        JSONArray jsonArray = printAppDB(rs);
 
-        if(jsonArray.isEmpty()){
-            return null;
+        JSONArray json = new JSONArray();
+        ResultSetMetaData rsmd = rs.getMetaData();
+        while(rs.next()) {
+            int numColumns = rsmd.getColumnCount();
+            JSONObject obj = new JSONObject();
+            for (int i=1; i<=numColumns; i++) {
+                String column_name = rsmd.getColumnName(i);
+                obj.put(column_name, rs.getObject(column_name));
+            }
+            json.add(obj);
         }
+
+        close(rs);
+        close(stmt);
+
+        if(json.isEmpty()){
+            throw new RuntimeException("Json is empty");
+        }
+
+        return json;
+    }
+
+    //get data from database with query as object
+    private JSONObject getJoByQuery(String query) throws SQLException {
+        JSONArray jsonArray = getJaByQuery(query);
 
         JSONObject jsonObject = (JSONObject) jsonArray.get(0);
-        close(rs);
-        close(stmt);
+
         return jsonObject;
     }
 
-    // feedbacks of specific app
-    public JSONArray getFbOfApp(String name) throws SQLException {
+    public Integer selectAppIdFromAppName(String appName) throws SQLException {
         Statement stmt;
         Connection conn = DBConnection.connection();
         stmt = conn.createStatement();
 
-        PreparedStatement ps = conn.prepareStatement("SELECT * FROM app_feedback WHERE app = ?");
-        ps.setString(1, name);
+        PreparedStatement ps = conn.prepareStatement("SELECT id FROM apps WHERE appName = ?");
+        ps.setString(1, appName);
+
         ResultSet rs = ps.executeQuery();
 
-
-        // Fetch each row from the result set
-        JSONArray jsonArray = printDB(rs);
-
+        int id = printAppId(rs);
         close(rs);
         close(stmt);
+        return id;
+    }
+
+    private Integer printAppId(ResultSet rs) throws SQLException {
+        int appId = 0;
+        while (rs.next()) {
+            appId = rs.getInt("id");
+        }
+        return appId;
+    }
+
+
+    // for putting JSONObjects into the JSONArray when all columns are needed
+    private JSONArray printDB(ResultSet rs) throws SQLException{
+        JSONArray jsonArray = new JSONArray();
+
+        while (rs.next()) {
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("id", rs.getInt("feedback_id"));
+            jsonObject.put("feedback", rs.getString("feedback"));
+            jsonObject.put("category", rs.getString("category"));
+            jsonObject.put("time", rs.getString("time"));
+            jsonObject.put("device", rs.getString("device"));
+            jsonObject.put("os", rs.getString("os"));
+            jsonObject.put("app", rs.getString("app"));
+            jsonObject.put("image", rs.getString("image"));
+            jsonObject.put("feature", rs.getString("features"));
+            jsonObject.put("stars", rs.getString("stars"));
+            jsonObject.put("rating", rs.getString("rating"));
+            jsonObject.put("starQuestion", rs.getString("star_question"));
+
+            jsonArray.add(jsonObject);
+        }
         return jsonArray;
     }
 
-    public JSONObject login(Map<String, String> json) throws Exception {
-        String appName = json.get("name");
-        String password = json.get("password");
+    private JSONArray printTemplateDB(ResultSet rs) throws SQLException {
+        JSONArray jsonArray = new JSONArray();
+        while(rs.next()) {
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("id", rs.getInt("Id"));
+            jsonObject.put("template", rs.getString("Template"));
+            jsonObject.put("featureConfig", rs.getString("FeatureConfig"));
+            jsonObject.put("starQuestion", rs.getString("StarQuestion"));
+            jsonObject.put("app", rs.getInt("App"));
+            jsonObject.put("appName", rs.getString("appName"));
 
-        JSONObject result = new JSONObject();
-
-        if(appName.isEmpty() || password.isEmpty()){
-            result.put("result", false);
-            return  result;
+            jsonArray.add(jsonObject);
         }
-
-        JSONObject app = this.getAppByName(appName);
-        boolean loginResult;
-
-        if(app != null){
-            loginResult = Password.check(password, (String) app.get("password"));
-        }else{
-            loginResult = false;
-        }
-
-        result.put("result", loginResult);
-
-        return result;
-
-    }
-
-    public JSONArray feedbacksPerYear() throws SQLException {
-        Statement stmt;
-        Connection conn = DBConnection.connection();
-        stmt = conn.createStatement();
-        ResultSet rs;
-        rs = stmt.executeQuery("SELECT * FROM app_feedback ORDER BY time ASC");
-        JSONArray jsonArray = printDB(rs);
-        int[] yearlyData = new int[12];
-        for (Object o : jsonArray) {
-            JSONObject json = (JSONObject) o;
-            String time = (String) json.get("time");
-            String month = time.substring(5,7);
-            int m = Integer.parseInt(month);
-            switch (m) {
-                case 1:
-                    yearlyData[0] += 1;
-                    break;
-                case 5:
-                    yearlyData[4] += 1;
-                    break;
-                case 9:
-                    yearlyData[8] += 1;
-                    break;
-                case 10:
-                    yearlyData[9] += 1;
-                    break;
-                case 11:
-                    yearlyData[10] += 1;
-                    break;
-            }
-        }
-        close(rs);
-        close(stmt);
-        JSONArray result = new JSONArray();
-        for (int i = 0; i < 12; i++) {
-            result.add(yearlyData[i]);
-        }
-        return result;
+        return jsonArray;
     }
 
     //
@@ -918,5 +651,74 @@ public class DB {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+
+
+    //
+    // MAYBE unnecessary
+    //
+
+    // Line count of whole database
+    public JSONArray feedbackCount() throws SQLException {
+
+        Statement stmt;
+        Connection conn = DBConnection.connection();
+        stmt = conn.createStatement();
+        ResultSet rs = stmt.executeQuery("SELECT COUNT(*) AS lc FROM app_feedback");
+        JSONArray jsonArray = new JSONArray();
+        while (rs.next()) {
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("feedbackAmount", rs.getInt("lc"));
+
+            jsonArray.add(jsonObject);
+        }
+        close(rs);
+        close(stmt);
+        return jsonArray;
+    }
+
+    // Line count of specific os
+    public JSONArray osCount(String request) throws SQLException {
+
+        Statement stmt;
+        Connection conn = DBConnection.connection();
+        stmt = conn.createStatement();
+
+        PreparedStatement ps = conn.prepareStatement("SELECT COUNT(*) AS lc FROM app_feedback WHERE os LIKE ?");
+        ps.setString(1, request);
+        ResultSet rs = ps.executeQuery();
+
+        JSONArray jsonArray = new JSONArray();
+        while (rs.next()) {
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put( request, rs.getInt("lc"));
+
+            jsonArray.add(jsonObject);
+        }
+        close(rs);
+        close(stmt);
+        return jsonArray;
+    }
+
+    // Using another solution for now, saving this in case
+    // we need a more dynamic approach
+    // OS Distribution
+    public JSONArray osDist() throws SQLException {
+
+        Statement stmt;
+        Connection conn = DBConnection.connection();
+        stmt = conn.createStatement();
+        ResultSet rs = stmt.executeQuery("SELECT DISTINCT os, count(os) AS CountOf FROM app_feedback Group By os ORDER BY os ASC;");
+        JSONArray jsonArray = new JSONArray();
+        while (rs.next()) {
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("os", rs.getString("os"));
+            jsonObject.put("count", rs.getInt("CountOf"));
+
+            jsonArray.add(jsonObject);
+        }
+        close(rs);
+        close(stmt);
+        return jsonArray;
     }
 }

@@ -20,11 +20,11 @@ public class Mapping {
     // MAIN METHODS
     //
 
-    // basic get (whole table)
+    // Basic select all feedback
     @ResponseBody
     @GetMapping("/get")
-    public JSONArray get() throws SQLException{
-        return db.selectAll();
+    public JSONArray getFeedback() throws SQLException {
+        return db.getFeedback();
     }
 
     // get all apps from DB
@@ -34,21 +34,12 @@ public class Mapping {
         return db.selectAllAps();
     }
 
-    // get all apps with questions from DB
-    @ResponseBody
-    @GetMapping("/get/appsWithQuestions")
-    public JSONArray getAppsWithQuestions() throws SQLException {
-        return db.selectAllAppsWithQuestions();
-    }
+    //
+    // POST
+    //
 
-    // get specific app from id
-    @ResponseBody
-    @GetMapping("/get/apps/{id}")
-    public JSONArray getAppFromId(@PathVariable("id") Integer id) throws SQLException {
-        return db.selectAppFromId(id);
-    }
-
-    // POST method
+    // POST query for adding feedback
+    // (Category should be either "bugreport", "suggestion" or "feedback")
     @ResponseBody
     @RequestMapping(value = "/post", method = RequestMethod.POST, consumes = "text/plain")
     public void post(@RequestBody String json) throws ParseException, SQLException {
@@ -57,6 +48,7 @@ public class Mapping {
         db.insert(jsonObject);
     }
 
+    // Adding an app
     //const { appName, logoURL, template, password,}
     @ResponseBody
     @RequestMapping(value = "/addAccount", method = RequestMethod.POST, consumes = "text/plain")
@@ -66,16 +58,44 @@ public class Mapping {
         db.insertAccount(jsonObject);
     }
 
-
     //
     // OTHER QUERIES
     //
 
-    //linecount; how many feedbacks
+    // get all apps with questions from DB
     @ResponseBody
-    @GetMapping("/get/linecount")
-    public JSONArray getLineCount() throws SQLException{
-        return db.feedbackCount();
+    @GetMapping("/get/appsWithQuestions")
+    public JSONArray getAppsWithQuestions() throws SQLException {
+        return db.selectAllAppsWithQuestions();
+    }
+
+    // get app data by searching with the app id (int)
+    @ResponseBody
+    @GetMapping("/get/apps/{id}")
+    public JSONArray getAppFromId(@PathVariable("id") Integer id) throws SQLException {
+        return db.selectAppFromId(id);
+    }
+
+    // Get app data by searching with the app name (string)
+    // (like getAppFromId but the result is in a bit different form)
+    @ResponseBody
+    @GetMapping("/get/appByName/{name}")
+    public JSONObject getAppByName(@PathVariable("name") String name) throws SQLException {
+        return db.getAppByName(name);
+    }
+
+    // Show template config of a specific app
+    @ResponseBody
+    @GetMapping("/get/templates/{id}")
+    public JSONArray getTemplateConfigFromApp(@PathVariable("id") Integer id) throws SQLException {
+        return db.selectTemplateConfigByApp(id);
+    }
+
+    // feedbacks of specific app
+    @ResponseBody
+    @GetMapping("/get/FbByAppName/{name}")
+    public JSONArray getFbByAppName(@PathVariable("name") String name) throws SQLException {
+        return db.getFbOfApp(name);
     }
 
     @ResponseBody
@@ -84,44 +104,14 @@ public class Mapping {
         return db.login(json);
     }
 
-    @ResponseBody
-    @GetMapping("/get/appByName/{name}")
-    public JSONObject getAppByName(@PathVariable("name") String name ) throws SQLException {
-        return db.getAppByName(name);
-    }
-
-    // feedbacks of specific app
-    @ResponseBody
-    @GetMapping("/get/FbByAppName/{name}")
-    public JSONArray getFbByAppName(@PathVariable("name") String name ) throws SQLException {
-        return db.getFbOfApp(name);
-    }
-
     //Category distribution
     @ResponseBody
     @GetMapping("/get/catDistr")
-    public JSONArray catDistr() throws SQLException{
+    public JSONArray catDistr() throws SQLException {
         return db.catDistr();
     }
 
-    //how many smileys of a specific value
-    @ResponseBody
-    @GetMapping("/get/linecount/smiley/{request}")
-    public JSONArray smileyLineCount(@PathVariable("request") String request ) throws SQLException, Exception {
-        int reqTest = 0;
-        try {
-            reqTest = Integer.parseInt(request);
-        } catch(Exception e) {
-            reqTest = 0;
-        }
-        if ((reqTest >= 1 && reqTest <= 10)){
-            return db.smileyCount(request);
-        }
-        else {
-            throw new Exception();
-        }
-    }
-
+    // count of all smileys (ratings) separately
     @ResponseBody
     @GetMapping("/get/linecount/smiley")
     public JSONArray smileyLineCountAll() throws SQLException, Exception {
@@ -133,13 +123,6 @@ public class Mapping {
     @GetMapping("/get/feedbacks/year")
     public JSONArray feedbacksPerYear() throws SQLException, Exception {
         return db.feedbacksPerYear();
-    }
-
-    //only feedback from a specific os
-    @ResponseBody
-    @GetMapping("/get/os/{request}")
-    public JSONArray osCount(@PathVariable("request") String request) throws SQLException, Exception {
-        return db.osCount(request);
     }
 
     // only feedbacks from 2 specific os
@@ -154,7 +137,6 @@ public class Mapping {
     @GetMapping("/get/id/{request}")
     public JSONArray theId(@PathVariable("request") String request) throws SQLException, Exception {
         return db.theId(request);
-
     }
 
     // Sort by time: /get/time/asc or /get/time/desc
@@ -163,70 +145,9 @@ public class Mapping {
     public JSONArray time(@PathVariable("request") String request) throws SQLException, Exception {
         if (request.equals("asc") || request.equals("desc")) {
             return db.time(request);
-        }
-        else {
+        } else {
             throw new Exception();
         }
-    }
-
-    // CHECK how is this different from feedbacksPerYear
-    @ResponseBody
-    @GetMapping("/get/feedbacks")
-    public JSONArray timeRange() throws SQLException, Exception {
-        return db.feedbacksPerMonth();
-    }
-
-// CHECK probably not needed
-/*    // Sort by device: /get/device/asc or /get/device/desc
-    @ResponseBody
-    @GetMapping("/get/device/{request}")
-    public JSONArray device(@PathVariable("request") String request) throws SQLException, Exception {
-        if (request.equals("asc") || request.equals("desc")) {
-            return db.device(request);
-        }
-        else {
-            throw new Exception();
-        }
-    }*/
-
-    // Sort by app: /get/app/asc or /get/app/desc
-    @ResponseBody
-    @GetMapping("/get/app/{request}")
-    public JSONArray app(@PathVariable("request") String request) throws SQLException, Exception {
-        if (request.equals("asc") || request.equals("desc")) {
-            return db.app(request);
-        }
-        else {
-            throw new Exception();
-        }
-    }
-
-    // CHECK if necessary
-    // Get smileys for example with /get/smiley/1 (1-10)
-    // or sort /get/smiley/asc or /get/smiley/desc
-    @ResponseBody
-    @GetMapping("/get/smiley/{request}")
-    public JSONArray smiley(@PathVariable("request") String request) throws SQLException, Exception {
-
-        int reqTest = 0;
-        try {
-            reqTest = Integer.parseInt(request);
-        } catch(Exception e) {
-            reqTest = 0;
-        }
-        if ((reqTest >= 1 && reqTest <= 10) || request.equals("asc") || request.equals("desc")){
-            return db.smiley(request);
-        }
-        else {
-            throw new Exception();
-        }
-    }
-
-    // get feedbacks of specific app
-    @ResponseBody
-    @GetMapping("/get/{app}")
-    public JSONArray selectAllAPP(@PathVariable("app") String request) throws SQLException {
-        return db.selectAllAPP(request);
     }
 
     // DELETE A FEEDBACK BY ID
@@ -236,30 +157,48 @@ public class Mapping {
         return db.deleteFeedback(id);
     }
 
-
     // Smiley averages per app
     @ResponseBody
     @GetMapping("/getAvgPerApp")
-    public JSONArray getAvgPerApp() throws SQLException{
+    public JSONArray getAvgPerApp() throws SQLException {
         return db.avgPerApp();
     }
 
     // Rating averages per app
     @ResponseBody
     @GetMapping("/getAvgRatingPerQuestPerApp/{app}")
-    public JSONArray avgStarPerQuesPerApp(@PathVariable("app") String app) throws SQLException{
+    public JSONArray avgStarPerQuesPerApp(@PathVariable("app") String app) throws SQLException {
         return db.avgStarPerQuesPerApp(app);
     }
 
 
-    // os distribution
+    // MAYBE UNNECESSARY
+
+    //linecount; how many feedbacks
+    @ResponseBody
+    @GetMapping("/get/linecount")
+    public JSONArray getLineCount() throws SQLException {
+        return db.feedbackCount();
+    }
+
+    // Do we need this?
+    // linecount of a specific os
+    @ResponseBody
+    @GetMapping("/get/os/{request}")
+    public JSONArray osCount(@PathVariable("request") String request) throws SQLException, Exception {
+        return db.osCount(request);
+    }
+
+
+    // Right now we're using osCountTwo() to get only data
+    // about iOS and Android in the charts but keeping this
+    // in case we'll need a more dynamic approach
+
+    // Os distribution
     @ResponseBody
     @GetMapping("/get/osdist")
     public JSONArray osDist() throws SQLException {
         return db.osDist();
 
     }
-
-
-
 }
