@@ -110,14 +110,16 @@ public class DB {
         String time = DateTime.now();
         String device = (jsonObject.get("device") != null ? jsonObject.get("device").toString() : null);
         String os = (jsonObject.get("os") != null ? jsonObject.get("os").toString() : null);
-
+        String question = (jsonObject.get("starQuestion") != null ? jsonObject.get("starQuestion").toString() : null);
+        String stars = (jsonObject.get("stars") != null ? jsonObject.get("stars").toString() : null);
         String image = (jsonObject.get("image") != null ? jsonObject.get("image").toString() : null);
+        String tag = (jsonObject.get("tag") != null ? jsonObject.get("tag").toString() : null);
 
         String query = String.format("INSERT INTO 1WKvtfAKZ1.app_feedback" +
-                        "(feedback, category, time, device,os,app,image,features,rating)" +
+                        "(feedback, category, time, device,os,app,image,features,rating, tag, stars, star_question)" +
                         "VALUES" +
-                        "('%s','%s','%s','%s','%s','%s','%s','%s','%s');",
-                 feedback, category, time, device, os, app, image, feature, rating
+                        "('%s','%s','%s','%s','%s','%s','%s','%s','%s', '%s', '%s', '%s');",
+                 feedback, category, time, device, os, app, image, feature, rating, tag, stars, question
         );
 
         stmt.executeUpdate(query);
