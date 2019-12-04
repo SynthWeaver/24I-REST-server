@@ -114,12 +114,13 @@ public class DB {
         String stars = (jsonObject.get("stars") != null ? jsonObject.get("stars").toString() : null);
         String image = (jsonObject.get("image") != null ? jsonObject.get("image").toString() : null);
         String tag = (jsonObject.get("tag") != null ? jsonObject.get("tag").toString() : null);
+        String template = (jsonObject.get("template") != null ? jsonObject.get("template").toString() : null);
 
         String query = String.format("INSERT INTO 1WKvtfAKZ1.app_feedback" +
-                        "(feedback, category, time, device,os,app,image,features,rating, tag, stars, star_question)" +
+                        "(feedback, category, time, device,os,app,image,features,rating, tag, stars, star_question, template)" +
                         "VALUES" +
-                        "('%s','%s','%s','%s','%s','%s','%s','%s','%s', '%s', '%s', '%s');",
-                 feedback, category, time, device, os, app, image, feature, rating, tag, stars, question
+                        "('%s','%s','%s','%s','%s','%s','%s','%s','%s', '%s', '%s', '%s', '%s');",
+                 feedback, category, time, device, os, app, image, feature, rating, tag, stars, question, template
         );
 
         stmt.executeUpdate(query);
@@ -450,7 +451,7 @@ public class DB {
         Connection conn = DBConnection.connection();
         stmt = conn.createStatement();
 
-        PreparedStatement ps = conn.prepareStatement("SELECT * FROM app_feedback  WHERE feedback_id = ?");
+        PreparedStatement ps = conn.prepareStatement("SELECT * FROM app_feedback  WHERE tag = ?");
         ps.setString(1, request);
         ResultSet rs = ps.executeQuery();
 
