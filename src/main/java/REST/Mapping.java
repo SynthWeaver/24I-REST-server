@@ -27,12 +27,26 @@ public class Mapping {
         return db.getFeedback();
     }
 
+    @ResponseBody
+    @GetMapping("/get/oneLineFeedbacks")
+    public JSONArray getOneLineFbs() throws SQLException {
+        return db.getOneLineFbs();
+    }
+
     // get all apps from DB
     @ResponseBody
     @GetMapping("/get/apps")
     public JSONArray getApps() throws SQLException {
         return db.selectAllAps();
     }
+
+    // list of tags
+    @ResponseBody
+    @GetMapping("/get/tags")
+    public JSONArray selectTags() throws SQLException {
+        return db.selectTags();
+    }
+
 
     //
     // POST
@@ -45,7 +59,7 @@ public class Mapping {
     public void post(@RequestBody String json) throws ParseException, SQLException {
         JSONParser jsonParser = new JSONParser();
         JSONObject jsonObject = (JSONObject) jsonParser.parse(json);
-        db.insert(jsonObject);
+        db.insertFeedback(jsonObject);
     }
 
     // Adding an app
@@ -61,6 +75,14 @@ public class Mapping {
     //
     // OTHER QUERIES
     //
+
+    // list of tags and their templates
+    @ResponseBody
+    @GetMapping("/get/tagsWithTemplates")
+    public JSONArray selectTagsWithTemplates() throws SQLException {
+        return db.selectTagsWithTemplates();
+    }
+
 
     // get all apps with questions from DB
     @ResponseBody
@@ -118,6 +140,7 @@ public class Mapping {
         return db.catDistr();
     }
 
+
     // count of all smileys (ratings) separately
     @ResponseBody
     @GetMapping("/get/linecount/smiley")
@@ -138,6 +161,7 @@ public class Mapping {
     public JSONArray osCountTwo(@PathVariable("os1") String os1, @PathVariable("os2") String os2) throws SQLException, Exception {
         return db.osCountTwo(os1, os2);
     }
+
 
     // only feedback with a specific id
     @ResponseBody

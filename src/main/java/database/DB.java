@@ -21,9 +21,41 @@ public class DB {
         return this.getJaByQuery(query);
     }
 
+    // basic select all group by tag
+    public JSONArray getOneLineFbs() throws SQLException {
+        Connection conn = DBConnection.connection();
+        Statement stmt = conn.createStatement();
+
+        ResultSet rs = stmt.executeQuery("SELECT * FROM app_feedback WHERE template = 'Template1' OR template = 'Template2' ORDER BY time");
+
+        JSONArray jsonArray = printDB(rs);
+
+        close(rs);
+        close(stmt);
+        return jsonArray;
+    }
+
     // select all apps from DB
     public JSONArray selectAllAps() throws SQLException {
         return this.getJaByQuery("SELECT * FROM apps");
+    }
+
+    // List of tags
+    public JSONArray selectTags() throws SQLException {
+        Connection conn = DBConnection.connection();
+        Statement stmt = conn.createStatement();
+        JSONArray jsonArray = new JSONArray();
+
+        ResultSet rs = stmt.executeQuery("SELECT DISTINCT tag FROM (SELECT tag, time FROM app_feedback ORDER BY time) a");
+        while (rs.next()){
+            JSONObject jso = new JSONObject();
+            jso.put("tag", rs.getString("tag"));
+            jsonArray.add(jso);
+        }
+
+        close(rs);
+        close(stmt);
+        return jsonArray;
     }
 
     //
@@ -32,33 +64,35 @@ public class DB {
 
     // For POST
     // (Category should be either "bugreport", "suggestion" or "feedback")
-    public void insert(JSONObject jsonObject) throws SQLException {
+    public void insertFeedback(JSONObject jsonObject) throws SQLException {
         Statement stmt;
         Connection conn = DBConnection.connection();
         stmt = conn.createStatement();
         //In frontend feedback moet het gemaakte jsonobject aangepast worden zodat er onder andere een feedback_id aangemaakt wordt
-        String app = jsonObject.get("app").toString();
-        String feature = jsonObject.get("feature").toString();
-        String rating = jsonObject.get("rating").toString();
+        String app = (jsonObject.get("app") != null ? jsonObject.get("app").toString() : null);
+        String features = (jsonObject.get("feature") != null ? jsonObject.get("feature").toString() : null);
+        String rating = (jsonObject.get("rating") != null ? jsonObject.get("rating").toString() : null);
 
-        String stars = jsonObject.get("stars").toString();
-        String feedback = jsonObject.get("feedback").toString();
-        String category = jsonObject.get("category").toString();
-        String starQuestion = jsonObject.get("starQuestion").toString();
+        String feedback = (jsonObject.get("feedback") != null ? jsonObject.get("feedback").toString() : null);
+        String category = (jsonObject.get("category") != null ? jsonObject.get("category").toString() : null);
         String time = DateTime.now();
-        String device = jsonObject.get("device").toString();
-        String os = jsonObject.get("os").toString();
+        String device = (jsonObject.get("device") != null ? jsonObject.get("device").toString() : null);
+        String os = (jsonObject.get("os") != null ? jsonObject.get("os").toString() : null);
+        String question = (jsonObject.get("starQuestion") != null ? jsonObject.get("starQuestion").toString() : null);
+        String stars = (jsonObject.get("stars") != null ? jsonObject.get("stars").toString() : null);
+        String image = (jsonObject.get("image") != null ? jsonObject.get("image").toString() : null);
+        String tag = (jsonObject.get("tag") != null ? jsonObject.get("tag").toString() : null);
+        String template = (jsonObject.get("template") != null ? jsonObject.get("template").toString() : null);
 
-        String image = jsonObject.get("image").toString();
-
-        String query = String.format("INSERT INTO app_feedback" +
-                        "(feedback, category, time, device, os, app, image, stars, features, rating, star_question)" +
+        String query = String.format("INSERT INTO feedbacks.app_feedback" +
+                        "(feedback, category, time, device,os,app,image,features,rating, tag, stars, star_question, template)" +
                         "VALUES" +
-                        "('%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s');",
-                feedback, category, time, device, os, app, image, stars, feature, rating, starQuestion
+                        "('%s','%s','%s','%s','%s','%s','%s','%s','%s', '%s', '%s', '%s', '%s');",
+                feedback, category, time, device, os, app, image, features, rating, tag, stars, question, template
         );
 
         stmt.executeUpdate(query);
+
         close(stmt);
     }
 
@@ -126,6 +160,51 @@ public class DB {
     //
     // OTHER QUERIES
     //
+
+    // List of tags and their templates
+    public JSONArray selectTagsWithTemplates() throws SQLException {
+        Statement stmt;
+        ResultSet rs;
+        Connection conn = DBConnection.connection();
+        stmt = conn.createStatement();
+        ArrayList<String> tags = new ArrayList<String>();
+        String curTag = "";
+
+        // get the list of tags from the database
+        JSONArray tagArray = selectTags();
+
+        // extract only tags into a list (without column labels)
+        for (int i = 0; i < tagArray.size(); i++){
+            JSONObject ob = (JSONObject)tagArray.get(i);
+            String temptag = (String) ob.get("tag");
+            tags.add(temptag);
+        }
+
+        // initialize new array that we
+        JSONArray jsonArray = new JSONArray();
+
+        // for all tags in our list, check what template they're using
+        // and save in our array both tag and template
+        for (int i = 0; i < tags.size(); i++){
+
+            curTag = tags.get(i);
+            PreparedStatement ps = conn.prepareStatement("SELECT DISTINCT template FROM app_feedback WHERE tag = ?");
+            ps.setString(1, curTag);
+
+            rs = ps.executeQuery();
+
+            while (rs.next()){
+                JSONObject jsonObject = new JSONObject();
+                jsonObject.put("tag", curTag);
+                jsonObject.put("template", rs.getString("template"));
+
+                jsonArray.add(jsonObject);
+            }
+            close(rs);
+        }
+        close(stmt);
+        return jsonArray;
+    }
 
     // select all different apps appearing in app_feedback
     public JSONArray allAppsWithFeedback() throws SQLException {
@@ -225,34 +304,54 @@ public class DB {
 
     // Category distribution
     public JSONArray catDistr() throws SQLException {
-
         Statement stmt;
+        ResultSet rs;
         Connection conn = DBConnection.connection();
         stmt = conn.createStatement();
+        ArrayList<String> tags = new ArrayList<String>();
+        String curTag = "";
+        int feed = 0, bugr = 0, sugg = 0;
 
+        // get the list of tags from the database
+        JSONArray tagArray = selectTags();
+
+        // extract only tags into a list (without column labels)
+        for (int i = 0; i < tagArray.size(); i++){
+            JSONObject ob = (JSONObject)tagArray.get(i);
+            String temptag = (String) ob.get("tag");
+            tags.add(temptag);
+        }
+
+        // for all tags in our list, check the category
+        for (int i = 0; i < tags.size(); i++){
+
+            curTag = tags.get(i);
+            PreparedStatement ps = conn.prepareStatement("SELECT DISTINCT category FROM app_feedback WHERE tag = ?");
+            ps.setString(1, curTag);
+
+            rs = ps.executeQuery();
+
+            while (rs.next()){
+                String curCat = rs.getString("category");
+                if (curCat.equals("feedback")){
+                    feed += 1;
+                } else if (curCat.equals("bugreport")){
+                    bugr += 1;
+                } else {
+                    sugg += 1;
+                }
+            }
+
+            close(rs);
+        }
 
         JSONObject jsonObject = new JSONObject();
+        jsonObject.put("feedback", feed);
+        jsonObject.put("bugreport", bugr);
+        jsonObject.put("suggestion", sugg);
         JSONArray jsonArray = new JSONArray();
-
-
-        ResultSet rs = stmt.executeQuery("SELECT COUNT(*) AS lc FROM app_feedback WHERE category = 'feedback'");
-
-        while (rs.next()) {
-            jsonObject.put("feedback", rs.getInt("lc"));
-        }
-
-        rs = stmt.executeQuery("SELECT COUNT(*) AS lc2 FROM app_feedback WHERE category = 'bugreport'");
-        while (rs.next()) {
-            jsonObject.put("bugreport", rs.getInt("lc2"));
-        }
-
-        rs = stmt.executeQuery("SELECT COUNT(*) AS lc3 FROM app_feedback WHERE category = 'suggestion'");
-        while (rs.next()) {
-            jsonObject.put("suggestion", rs.getInt("lc3"));
-        }
-
         jsonArray.add(jsonObject);
-        close(rs);
+
         close(stmt);
         return jsonArray;
     }
@@ -326,33 +425,64 @@ public class DB {
 
     // Line count of 2 specific os's
     public JSONArray osCountTwo(String os1, String os2) throws SQLException {
+
         Statement stmt;
+        ResultSet rs;
         Connection conn = DBConnection.connection();
         stmt = conn.createStatement();
+        ArrayList<String> tags = new ArrayList<String>();
+        String curTag = "";
+        int os1count = 0, os2count = 0;
 
-        PreparedStatement ps = conn.prepareStatement("SELECT COUNT(*) AS lc FROM app_feedback WHERE os LIKE ?");
-        PreparedStatement ps2 = conn.prepareStatement("SELECT COUNT(*) AS lc2 FROM app_feedback WHERE os LIKE ?");
-        ps.setString(1, "%" + os1 + "%");
-        ps2.setString(1, "%" + os2 + "%");
-        ResultSet rs = ps.executeQuery();
+        // get the list of tags from the database
+        JSONArray tagArray = selectTags();
+
+        // extract only tags into a list (without column labels)
+        for (int i = 0; i < tagArray.size(); i++){
+            JSONObject ob = (JSONObject)tagArray.get(i);
+            String temptag = (String) ob.get("tag");
+            tags.add(temptag);
+        }
+
+        // for all tags in our list, check the category
+        for (int i = 0; i < tags.size(); i++){
+
+            curTag = tags.get(i);
+
+
+            PreparedStatement ps = conn.prepareStatement("SELECT DISTINCT os FROM app_feedback WHERE tag = ? AND os = ?");
+            PreparedStatement ps2 = conn.prepareStatement("SELECT DISTINCT os FROM app_feedback WHERE tag = ? AND os = ?");
+            ps.setString(1, curTag);
+            ps.setString(2, os1);
+            ps2.setString(1, curTag);
+            ps2.setString(2, os2);
+
+            rs = ps.executeQuery();
+
+            while (rs.next()){
+                os1count += 1;
+            }
+
+            rs = ps2.executeQuery();
+
+            while (rs.next()){
+                os2count += 1;
+            }
+
+            close(rs);
+        }
 
         JSONObject jsonObject = new JSONObject();
-
+        jsonObject.put(os1, os1count);
+        jsonObject.put(os2, os2count);
         JSONArray jsonArray = new JSONArray();
-
-        while (rs.next()) {
-            jsonObject.put(os1, rs.getInt("lc"));
-        }
-
-        rs = ps2.executeQuery();
-        while (rs.next()) {
-            jsonObject.put(os2, rs.getInt("lc2"));
-        }
         jsonArray.add(jsonObject);
-        close(rs);
+
         close(stmt);
         return jsonArray;
     }
+
+
 
     // Feedback with a specific Id
     public JSONArray theId(String request) throws SQLException {
@@ -454,8 +584,8 @@ public class DB {
             int newAvg = (int)(avg*100);
 
             JSONObject jsonOb = new JSONObject();
-            jsonOb.put("app", cur);
-            jsonOb.put("avg", newAvg);
+            jsonOb.put("x", cur);
+            jsonOb.put("y", newAvg);
             jsonArray.add(jsonOb);
             sum = 0;
         }
@@ -619,10 +749,13 @@ public class DB {
             jsonObject.put("os", rs.getString("os"));
             jsonObject.put("app", rs.getString("app"));
             jsonObject.put("image", rs.getString("image"));
-            jsonObject.put("feature", rs.getString("features"));
+            jsonObject.put("features", rs.getString("features"));
             jsonObject.put("stars", rs.getString("stars"));
             jsonObject.put("rating", rs.getString("rating"));
             jsonObject.put("starQuestion", rs.getString("star_question"));
+
+            jsonObject.put("tag", rs.getString("tag"));
+            jsonObject.put("template", rs.getString("template"));
 
             jsonArray.add(jsonObject);
         }
@@ -740,4 +873,6 @@ public class DB {
         close(stmt);
         return jsonArray;
     }
+
+
 }
