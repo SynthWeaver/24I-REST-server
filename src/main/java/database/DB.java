@@ -493,7 +493,38 @@ public class DB {
     public JSONArray oneJsonPerTag(String request) throws SQLException {
         JSONArray tempArray = theTag(request);
 
-        // if size is bigger than one, it's going to have questions so we want a different JSON
+        JSONObject jsonObject1 = (JSONObject) tempArray.get(0);
+
+        // get the data that's mutual to all objects
+        String id = jsonObject1.get("id").toString();
+        String app = jsonObject1.get("app").toString();
+        String feedback = jsonObject1.get("feedback").toString();
+        String category = jsonObject1.get("category").toString();
+        String time = jsonObject1.get("time").toString();
+        String device = jsonObject1.get("device").toString();
+        String os = jsonObject1.get("os").toString();
+        String tag = jsonObject1.get("tag").toString();
+        String template = jsonObject1.get("template").toString();
+        String rating = jsonObject1.get("rating").toString();
+        String features = jsonObject1.get("features").toString();
+
+        JSONObject parentData = new JSONObject();
+
+        parentData.put("id", id);
+        parentData.put("feedback", feedback);
+        parentData.put("category", category);
+        parentData.put("time", time);
+        parentData.put("device", device);
+        parentData.put("os", os);
+        parentData.put("app", app);
+        parentData.put("tag", tag);
+        parentData.put("template", template);
+
+        JSONArray jsonArray = new JSONArray();
+
+
+        // if size is bigger than one, it's going to have questions so
+        // we want those in the JSONObject
         if (tempArray.size() > 1) {
 
             ArrayList<String> questions = new ArrayList<String>();
@@ -505,22 +536,6 @@ public class DB {
                 stars.add(jso.get("stars").toString());
             }
 
-
-            JSONObject jsonObject1 = (JSONObject) tempArray.get(0);
-
-            String id = jsonObject1.get("id").toString();
-            String app = jsonObject1.get("app").toString();
-            String feedback = jsonObject1.get("feedback").toString();
-            String category = jsonObject1.get("category").toString();
-            String time = jsonObject1.get("time").toString();
-            String device = jsonObject1.get("device").toString();
-            String os = jsonObject1.get("os").toString();
-            String tag = jsonObject1.get("tag").toString();
-            String template = jsonObject1.get("template").toString();
-
-            JSONArray jsonArray = new JSONArray();
-
-            JSONObject parentData = new JSONObject();
             JSONObject childData = new JSONObject();
 
             for (int i = 0; i < tempArray.size(); i++){
@@ -530,55 +545,17 @@ public class DB {
                 childData.put("question"+(i), jso);
             }
 
-            parentData.put("id", id);
-            parentData.put("feedback", feedback);
-            parentData.put("category", category);
-            parentData.put("time", time);
-            parentData.put("device", device);
-            parentData.put("os", os);
-            parentData.put("app", app);
-            parentData.put("tag", tag);
-            parentData.put("template", template);
-
             parentData.put("questions", childData);
-
-            System.out.println(parentData);
-
-
             jsonArray.add(parentData);
             return jsonArray;
 
         } else {
-            JSONObject jsonObject1 = (JSONObject) tempArray.get(0);
 
-            String id = jsonObject1.get("id").toString();
-            String app = jsonObject1.get("app").toString();
-            String rating = jsonObject1.get("rating").toString();
-            String features = jsonObject1.get("features").toString();
-            String feedback = jsonObject1.get("feedback").toString();
-            String category = jsonObject1.get("category").toString();
-            String time = jsonObject1.get("time").toString();
-            String device = jsonObject1.get("device").toString();
-            String os = jsonObject1.get("os").toString();
-            String tag = jsonObject1.get("tag").toString();
-            String template = jsonObject1.get("template").toString();
-
-            JSONArray jsonArray = new JSONArray();
-
-            JSONObject parentData = new JSONObject();
-
-            parentData.put("id", id);
-            parentData.put("feedback", feedback);
-            parentData.put("category", category);
+            // Since the size is not greater than 1, it's template 1 or 2
+            // so we want rating and features instead of questions
+            
             parentData.put("rating", rating);
             parentData.put("features", features);
-            parentData.put("time", time);
-            parentData.put("device", device);
-            parentData.put("os", os);
-            parentData.put("app", app);
-            parentData.put("tag", tag);
-            parentData.put("template", template);
-
             jsonArray.add(parentData);
             return jsonArray;
 
