@@ -33,13 +33,6 @@ public class Mapping {
         return db.getAllGroupByTag();
     }
 
-    // Only feedbacks that use Template1 or Template2
-    @ResponseBody
-    @GetMapping("/get/oneLineFeedbacks")
-    public JSONArray getOneLineFbs() throws SQLException {
-        return db.getOneLineFbs();
-    }
-
     // get all apps from DB
     @ResponseBody
     @GetMapping("/get/apps")
@@ -182,6 +175,13 @@ public class Mapping {
         return db.theTag(request);
     }
 
+    // only feedback with a specific tag
+    @ResponseBody
+    @GetMapping("/get/nested/{request}")
+    public JSONArray oneJsonPerTag(@PathVariable("request") String request) throws SQLException, Exception {
+        return db.oneJsonPerTag(request);
+    }
+
     // Sort by time: /get/time/asc or /get/time/desc
     @ResponseBody
     @GetMapping("/get/time/{request}")
@@ -193,11 +193,11 @@ public class Mapping {
         }
     }
 
-    // DELETE A FEEDBACK BY ID
+    // DELETE FEEDBACK BY tag
     @ResponseBody
-    @GetMapping("/areyousure/delete/{id}")
-    public int deleteFeedback(@PathVariable("id") Integer id) throws SQLException {
-        return db.deleteFeedback(id);
+    @GetMapping("/areyousure/delete/{tag}")
+    public int deleteFeedback(@PathVariable("id") String tag) throws SQLException {
+        return db.deleteFeedback(tag);
     }
 
     // Smiley averages per app
@@ -243,5 +243,12 @@ public class Mapping {
     public JSONArray osDist() throws SQLException {
         return db.osDist();
 
+    }
+
+    // Only feedbacks that use Template1 or Template2
+    @ResponseBody
+    @GetMapping("/get/oneLineFeedbacks")
+    public JSONArray getOneLineFbs() throws SQLException {
+        return db.getOneLineFbs();
     }
 }

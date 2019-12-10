@@ -33,19 +33,7 @@ public class DB {
         return jsonArray;
     }
 
-    // basic select all group by tag
-    public JSONArray getOneLineFbs() throws SQLException {
-        Connection conn = DBConnection.connection();
-        Statement stmt = conn.createStatement();
 
-        ResultSet rs = stmt.executeQuery("SELECT * FROM app_feedback WHERE template = 'Template1' OR template = 'Template2' ORDER BY time");
-
-        JSONArray jsonArray = printDB(rs);
-
-        close(rs);
-        close(stmt);
-        return jsonArray;
-    }
 
     // select all apps from DB
     public JSONArray selectAllAps() throws SQLException {
@@ -81,20 +69,20 @@ public class DB {
         Connection conn = DBConnection.connection();
         stmt = conn.createStatement();
         //In frontend feedback moet het gemaakte jsonobject aangepast worden zodat er onder andere een feedback_id aangemaakt wordt
-        String app = (jsonObject.get("app") != null ? jsonObject.get("app").toString() : null);
-        String features = (jsonObject.get("feature") != null ? jsonObject.get("feature").toString() : null);
-        String rating = (jsonObject.get("rating") != null ? jsonObject.get("rating").toString() : null);
+        String app = (jsonObject.get("app") != null ? jsonObject.get("app").toString() : "");
+        String features = (jsonObject.get("feature") != null ? jsonObject.get("feature").toString() : "");
+        String rating = (jsonObject.get("rating") != null ? jsonObject.get("rating").toString() : "");
 
-        String feedback = (jsonObject.get("feedback") != null ? jsonObject.get("feedback").toString() : null);
-        String category = (jsonObject.get("category") != null ? jsonObject.get("category").toString() : null);
+        String feedback = (jsonObject.get("feedback") != null ? jsonObject.get("feedback").toString() : "");
+        String category = (jsonObject.get("category") != null ? jsonObject.get("category").toString() : "");
         String time = DateTime.now();
-        String device = (jsonObject.get("device") != null ? jsonObject.get("device").toString() : null);
-        String os = (jsonObject.get("os") != null ? jsonObject.get("os").toString() : null);
-        String question = (jsonObject.get("starQuestion") != null ? jsonObject.get("starQuestion").toString() : null);
-        String stars = (jsonObject.get("stars") != null ? jsonObject.get("stars").toString() : null);
-        String image = (jsonObject.get("image") != null ? jsonObject.get("image").toString() : null);
-        String tag = (jsonObject.get("tag") != null ? jsonObject.get("tag").toString() : null);
-        String template = (jsonObject.get("template") != null ? jsonObject.get("template").toString() : null);
+        String device = (jsonObject.get("device") != null ? jsonObject.get("device").toString() : "");
+        String os = (jsonObject.get("os") != null ? jsonObject.get("os").toString() : "");
+        String question = (jsonObject.get("starQuestion") != null ? jsonObject.get("starQuestion").toString() : "");
+        String stars = (jsonObject.get("stars") != null ? jsonObject.get("stars").toString() : "");
+        String image = (jsonObject.get("image") != null ? jsonObject.get("image").toString() : "");
+        String tag = (jsonObject.get("tag") != null ? jsonObject.get("tag").toString() : "");
+        String template = (jsonObject.get("template") != null ? jsonObject.get("template").toString() : "");
 
         String query = String.format("INSERT INTO feedbacks.app_feedback" +
                         "(feedback, category, time, device,os,app,image,features,rating, tag, stars, star_question, template)" +
@@ -179,7 +167,7 @@ public class DB {
         Connection conn = DBConnection.connection();
         stmt = conn.createStatement();
 
-        ResultSet rs = stmt.executeQuery("SELECT template, tag FROM app_feedback GROUP BY tag;");
+        ResultSet rs = stmt.executeQuery("SELECT tag, template FROM app_feedback GROUP BY tag;");
 
         JSONArray jsonArray = new JSONArray();
 
@@ -492,7 +480,7 @@ public class DB {
         Connection conn = DBConnection.connection();
         stmt = conn.createStatement();
 
-        PreparedStatement ps = conn.prepareStatement("SELECT * FROM app_feedback  WHERE tag = ?");
+        PreparedStatement ps = conn.prepareStatement("SELECT * FROM app_feedback WHERE tag = ?");
         ps.setString(1, request);
         ResultSet rs = ps.executeQuery();
 
@@ -500,6 +488,101 @@ public class DB {
         close(rs);
         close(stmt);
         return jsonArray;
+    }
+
+    public JSONArray oneJsonPerTag(String request) throws SQLException {
+        JSONArray tempArray = theTag(request);
+
+        // if size is bigger than one, it's going to have questions so we want a different JSON
+        if (tempArray.size() > 1) {
+
+            ArrayList<String> questions = new ArrayList<String>();
+            ArrayList<String> stars = new ArrayList<String>();
+
+            for (int i = 0; i < tempArray.size(); i++){
+                JSONObject jso = (JSONObject) tempArray.get(i);
+                questions.add(jso.get("starQuestion").toString());
+                stars.add(jso.get("stars").toString());
+            }
+
+
+            JSONObject jsonObject1 = (JSONObject) tempArray.get(0);
+
+            String id = jsonObject1.get("id").toString();
+            String app = jsonObject1.get("app").toString();
+            String feedback = jsonObject1.get("feedback").toString();
+            String category = jsonObject1.get("category").toString();
+            String time = jsonObject1.get("time").toString();
+            String device = jsonObject1.get("device").toString();
+            String os = jsonObject1.get("os").toString();
+            String tag = jsonObject1.get("tag").toString();
+            String template = jsonObject1.get("template").toString();
+
+            JSONArray jsonArray = new JSONArray();
+
+            JSONObject parentData = new JSONObject();
+            JSONObject childData = new JSONObject();
+
+            for (int i = 0; i < tempArray.size(); i++){
+                JSONObject jso = new JSONObject();
+                jso.put("question", questions.get(i));
+                jso.put("stars", stars.get(i));
+                childData.put("question"+(i), jso);
+            }
+
+            parentData.put("id", id);
+            parentData.put("feedback", feedback);
+            parentData.put("category", category);
+            parentData.put("time", time);
+            parentData.put("device", device);
+            parentData.put("os", os);
+            parentData.put("app", app);
+            parentData.put("tag", tag);
+            parentData.put("template", template);
+
+            parentData.put("questions", childData);
+
+            System.out.println(parentData);
+
+
+            jsonArray.add(parentData);
+            return jsonArray;
+
+        } else {
+            JSONObject jsonObject1 = (JSONObject) tempArray.get(0);
+
+            String id = jsonObject1.get("id").toString();
+            String app = jsonObject1.get("app").toString();
+            String rating = jsonObject1.get("rating").toString();
+            String features = jsonObject1.get("features").toString();
+            String feedback = jsonObject1.get("feedback").toString();
+            String category = jsonObject1.get("category").toString();
+            String time = jsonObject1.get("time").toString();
+            String device = jsonObject1.get("device").toString();
+            String os = jsonObject1.get("os").toString();
+            String tag = jsonObject1.get("tag").toString();
+            String template = jsonObject1.get("template").toString();
+
+            JSONArray jsonArray = new JSONArray();
+
+            JSONObject parentData = new JSONObject();
+
+            parentData.put("id", id);
+            parentData.put("feedback", feedback);
+            parentData.put("category", category);
+            parentData.put("rating", rating);
+            parentData.put("features", features);
+            parentData.put("time", time);
+            parentData.put("device", device);
+            parentData.put("os", os);
+            parentData.put("app", app);
+            parentData.put("tag", tag);
+            parentData.put("template", template);
+
+            jsonArray.add(parentData);
+            return jsonArray;
+
+        }
     }
 
     // Sort by time
@@ -522,12 +605,12 @@ public class DB {
     }
 
     // Delete a feedback
-    public Integer deleteFeedback(Integer request) throws SQLException {
+    public Integer deleteFeedback(String request) throws SQLException {
         Statement stmt;
         Connection conn = DBConnection.connection();
         stmt = conn.createStatement();
-        PreparedStatement ps = conn.prepareStatement("DELETE FROM app_feedback WHERE feedback_id = ?");
-        ps.setInt(1, request);
+        PreparedStatement ps = conn.prepareStatement("DELETE FROM app_feedback WHERE tag = ?");
+        ps.setString(1, request);
         Integer result = ps.executeUpdate();
         close(stmt);
         return result;
@@ -875,5 +958,18 @@ public class DB {
         return jsonArray;
     }
 
+    // basic select all group by tag
+    public JSONArray getOneLineFbs() throws SQLException {
+        Connection conn = DBConnection.connection();
+        Statement stmt = conn.createStatement();
+
+        ResultSet rs = stmt.executeQuery("SELECT * FROM app_feedback WHERE template = 'Template1' OR template = 'Template2' ORDER BY time");
+
+        JSONArray jsonArray = printDB(rs);
+
+        close(rs);
+        close(stmt);
+        return jsonArray;
+    }
 
 }
