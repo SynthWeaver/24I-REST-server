@@ -495,18 +495,17 @@ public class DB {
 
         JSONObject jsonObject1 = (JSONObject) tempArray.get(0);
 
-        // get the data that's mutual to all objects
-        String id = jsonObject1.get("id").toString();
-        String app = jsonObject1.get("app").toString();
-        String feedback = jsonObject1.get("feedback").toString();
-        String category = jsonObject1.get("category").toString();
+        String id = (jsonObject1.get("id") != null ? jsonObject1.get("id").toString() : "");
+        String app = (jsonObject1.get("app") != null ? jsonObject1.get("app").toString() : "");
+        String features = (jsonObject1.get("feature") != null ? jsonObject1.get("feature").toString() : "");
+        String rating = (jsonObject1.get("rating") != null ? jsonObject1.get("rating").toString() : "");
+        String feedback = (jsonObject1.get("feedback") != null ? jsonObject1.get("feedback").toString() : "");
+        String category = (jsonObject1.get("category") != null ? jsonObject1.get("category").toString() : "");
         String time = jsonObject1.get("time").toString();
-        String device = jsonObject1.get("device").toString();
-        String os = jsonObject1.get("os").toString();
-        String tag = jsonObject1.get("tag").toString();
-        String template = jsonObject1.get("template").toString();
-        String rating = jsonObject1.get("rating").toString();
-        String features = jsonObject1.get("features").toString();
+        String device = (jsonObject1.get("device") != null ? jsonObject1.get("device").toString() : "");
+        String os = (jsonObject1.get("os") != null ? jsonObject1.get("os").toString() : "");
+        String tag = (jsonObject1.get("tag") != null ? jsonObject1.get("tag").toString() : "");
+        String template = (jsonObject1.get("template") != null ? jsonObject1.get("template").toString() : "");
 
         JSONObject parentData = new JSONObject();
 
@@ -553,7 +552,7 @@ public class DB {
 
             // Since the size is not greater than 1, it's template 1 or 2
             // so we want rating and features instead of questions
-            
+
             parentData.put("rating", rating);
             parentData.put("features", features);
             jsonArray.add(parentData);
@@ -610,7 +609,7 @@ public class DB {
         stmt = conn.createStatement();
 
         // See how many different apps and put them in an array list
-        ResultSet rs = stmt.executeQuery("SELECT DISTINCT app FROM app_feedback WHERE rating IS NOT NULL AND rating <> \"\" ORDER BY app");
+        ResultSet rs = stmt.executeQuery("SELECT DISTINCT app FROM app_feedback WHERE rating IS NOT NULL AND rating <> \"\" AND rating <> \" \" ORDER BY app");
 
         while (rs.next()) {
 
@@ -621,7 +620,7 @@ public class DB {
         // For every app in the array list, check the smileys, add them to variable sum
         for (int i = 0; i < max; i++){
             cur = apps.get(i);
-            PreparedStatement ps = conn.prepareStatement("SELECT rating AS num FROM app_feedback WHERE app = ? AND rating IS NOT NULL AND rating <> \"\"");
+            PreparedStatement ps = conn.prepareStatement("SELECT rating AS num FROM app_feedback WHERE app = ? AND rating IS NOT NULL AND rating <> \"\" AND rating <> \" \"");
             ps.setString(1, cur);
             rs = ps.executeQuery();
 
@@ -802,6 +801,7 @@ public class DB {
 
         while (rs.next()) {
             JSONObject jsonObject = new JSONObject();
+
             jsonObject.put("id", rs.getInt("feedback_id"));
             jsonObject.put("feedback", rs.getString("feedback"));
             jsonObject.put("category", rs.getString("category"));
