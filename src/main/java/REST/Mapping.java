@@ -168,7 +168,6 @@ public class Mapping {
         return db.osCountTwo(os1, os2);
     }
 
-
     // only feedback with a specific id
     @ResponseBody
     @GetMapping("/get/id/{request}")

@@ -350,8 +350,7 @@ public class DB {
         return jsonArray;
     }
 
-    //2019
-    // Get time stamps of all feedbacks and divide them per month
+    // Get time stamps of all feedbacks for requested year and divide them per month
     public JSONArray feedbacksPerMonth(String request) throws SQLException {
         Statement stmt;
         Connection conn = DBConnection.connection();
@@ -431,6 +430,7 @@ public class DB {
         return result;
     }
 
+
     // Line count of 2 specific os's
     public JSONArray osCountTwo(String os1, String os2) throws SQLException {
 
@@ -438,59 +438,37 @@ public class DB {
         ResultSet rs;
         Connection conn = DBConnection.connection();
         stmt = conn.createStatement();
-        ArrayList<String> tags = new ArrayList<String>();
-        String curTag = "";
         int os1count = 0, os2count = 0;
 
-        // get the list of tags from the database
-        JSONArray tagArray = selectTags();
+        PreparedStatement ps = conn.prepareStatement("SELECT os FROM app_feedback WHERE os = ? GROUP BY tag;");
+        PreparedStatement ps2 = conn.prepareStatement("SELECT os FROM app_feedback WHERE os = ? GROUP BY tag;");
+        ps.setString(1, os1);
+        ps2.setString(1, os2);
 
-        // extract only tags into a list (without column labels)
-        for (int i = 0; i < tagArray.size(); i++){
-            JSONObject ob = (JSONObject)tagArray.get(i);
-            String temptag = (String) ob.get("tag");
-            tags.add(temptag);
+        rs = ps.executeQuery();
+
+        while (rs.next()) {
+            os1count += 1;
         }
 
-        // for all tags in our list, check the category
-        for (int i = 0; i < tags.size(); i++){
+        rs = ps2.executeQuery();
 
-            curTag = tags.get(i);
-
-
-            PreparedStatement ps = conn.prepareStatement("SELECT DISTINCT os FROM app_feedback WHERE tag = ? AND os = ?");
-            PreparedStatement ps2 = conn.prepareStatement("SELECT DISTINCT os FROM app_feedback WHERE tag = ? AND os = ?");
-            ps.setString(1, curTag);
-            ps.setString(2, os1);
-            ps2.setString(1, curTag);
-            ps2.setString(2, os2);
-
-            rs = ps.executeQuery();
-
-            while (rs.next()){
-                os1count += 1;
-            }
-
-            rs = ps2.executeQuery();
-
-            while (rs.next()){
-                os2count += 1;
-            }
-
-            close(rs);
+        while (rs.next()) {
+            os2count += 1;
         }
+
+        close(rs);
 
         JSONObject jsonObject = new JSONObject();
         jsonObject.put(os1, os1count);
         jsonObject.put(os2, os2count);
+
         JSONArray jsonArray = new JSONArray();
         jsonArray.add(jsonObject);
 
         close(stmt);
         return jsonArray;
     }
-
-
 
     // Feedback with a specific Id
     public JSONArray theId(String request) throws SQLException {
