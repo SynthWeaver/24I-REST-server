@@ -182,6 +182,13 @@ public class Mapping {
         return db.oneJsonPerTag(request);
     }
 
+    // only questions with a specific tag
+    @ResponseBody
+    @GetMapping("/get/questions/{request}")
+    public JSONArray questionsPerTag(@PathVariable("request") String request) throws SQLException, Exception {
+        return db.questionsPerTag(request);
+    }
+
     // Sort by time: /get/time/asc or /get/time/desc
     @ResponseBody
     @GetMapping("/get/time/{request}")

@@ -490,6 +490,32 @@ public class DB {
         return jsonArray;
     }
 
+    public JSONArray questionsPerTag(String request) throws SQLException {
+        JSONArray tempArray = theTag(request);
+        JSONArray jsonArray = new JSONArray();
+
+        ArrayList<String> questions = new ArrayList<String>();
+        ArrayList<String> stars = new ArrayList<String>();
+
+
+        for (int i = 0; i < tempArray.size(); i++){
+            JSONObject jso = (JSONObject) tempArray.get(i);
+            questions.add(jso.get("starQuestion").toString());
+            stars.add(jso.get("stars").toString());
+        }
+        
+        for (int i = 0; i < tempArray.size(); i++){
+            JSONObject jso = new JSONObject();
+            jso.put("question", questions.get(i));
+            jso.put("stars", stars.get(i));
+
+            jsonArray.add(jso);
+        }
+
+        return jsonArray;
+
+    }
+
     public JSONArray oneJsonPerTag(String request) throws SQLException {
         JSONArray tempArray = theTag(request);
 
