@@ -28,6 +28,13 @@ public class Mapping {
     }
 
     @ResponseBody
+    @GetMapping("/get/GroupByTag")
+    public JSONArray getGroupByTag() throws SQLException {
+        return db.getAllGroupByTag();
+    }
+
+    // Only feedbacks that use Template1 or Template2
+    @ResponseBody
     @GetMapping("/get/oneLineFeedbacks")
     public JSONArray getOneLineFbs() throws SQLException {
         return db.getOneLineFbs();
@@ -140,7 +147,6 @@ public class Mapping {
         return db.catDistr();
     }
 
-
     // count of all smileys (ratings) separately
     @ResponseBody
     @GetMapping("/get/linecount/smiley")
@@ -150,9 +156,9 @@ public class Mapping {
 
     // Feedbacks per year
     @ResponseBody
-    @GetMapping("/get/feedbacks/year")
-    public JSONArray feedbacksPerYear() throws SQLException, Exception {
-        return db.feedbacksPerYear();
+    @GetMapping("/get/feedbacks/year/{year}")
+    public JSONArray feedbacksPerYear(@PathVariable("year") String year) throws SQLException, Exception {
+        return db.feedbacksPerMonth(year);
     }
 
     // only feedbacks from 2 specific os
@@ -168,6 +174,13 @@ public class Mapping {
     @GetMapping("/get/id/{request}")
     public JSONArray theId(@PathVariable("request") String request) throws SQLException, Exception {
         return db.theId(request);
+    }
+
+    // only feedback with a specific tag
+    @ResponseBody
+    @GetMapping("/get/tag/{request}")
+    public JSONArray theTag(@PathVariable("request") String request) throws SQLException, Exception {
+        return db.theTag(request);
     }
 
     // Sort by time: /get/time/asc or /get/time/desc

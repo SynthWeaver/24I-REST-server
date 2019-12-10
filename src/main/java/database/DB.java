@@ -22,6 +22,18 @@ public class DB {
     }
 
     // basic select all group by tag
+    public JSONArray getAllGroupByTag() throws SQLException {
+        Connection conn = DBConnection.connection();
+        Statement stmt = conn.createStatement();
+
+        ResultSet rs = stmt.executeQuery("SELECT * FROM feedbacks.app_feedback GROUP BY tag;");
+
+        JSONArray jsonArray = printDB(rs);
+
+        return jsonArray;
+    }
+
+    // basic select all group by tag
     public JSONArray getOneLineFbs() throws SQLException {
         Connection conn = DBConnection.connection();
         Statement stmt = conn.createStatement();
@@ -164,44 +176,21 @@ public class DB {
     // List of tags and their templates
     public JSONArray selectTagsWithTemplates() throws SQLException {
         Statement stmt;
-        ResultSet rs;
         Connection conn = DBConnection.connection();
         stmt = conn.createStatement();
-        ArrayList<String> tags = new ArrayList<String>();
-        String curTag = "";
 
-        // get the list of tags from the database
-        JSONArray tagArray = selectTags();
+        ResultSet rs = stmt.executeQuery("SELECT template, tag FROM app_feedback GROUP BY tag;");
 
-        // extract only tags into a list (without column labels)
-        for (int i = 0; i < tagArray.size(); i++){
-            JSONObject ob = (JSONObject)tagArray.get(i);
-            String temptag = (String) ob.get("tag");
-            tags.add(temptag);
-        }
-
-        // initialize new array that we
         JSONArray jsonArray = new JSONArray();
 
-        // for all tags in our list, check what template they're using
-        // and save in our array both tag and template
-        for (int i = 0; i < tags.size(); i++){
+        while (rs.next()){
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("tag", rs.getString("tag"));
+            jsonObject.put("template", rs.getString("template"));
 
-            curTag = tags.get(i);
-            PreparedStatement ps = conn.prepareStatement("SELECT DISTINCT template FROM app_feedback WHERE tag = ?");
-            ps.setString(1, curTag);
-
-            rs = ps.executeQuery();
-
-            while (rs.next()){
-                JSONObject jsonObject = new JSONObject();
-                jsonObject.put("tag", curTag);
-                jsonObject.put("template", rs.getString("template"));
-
-                jsonArray.add(jsonObject);
-            }
-            close(rs);
+            jsonArray.add(jsonObject);
         }
+        close(rs);
         close(stmt);
         return jsonArray;
     }
@@ -305,45 +294,23 @@ public class DB {
     // Category distribution
     public JSONArray catDistr() throws SQLException {
         Statement stmt;
-        ResultSet rs;
         Connection conn = DBConnection.connection();
         stmt = conn.createStatement();
-        ArrayList<String> tags = new ArrayList<String>();
-        String curTag = "";
         int feed = 0, bugr = 0, sugg = 0;
 
-        // get the list of tags from the database
-        JSONArray tagArray = selectTags();
+        ResultSet rs = stmt.executeQuery("SELECT category FROM feedbacks.app_feedback GROUP BY tag;");
 
-        // extract only tags into a list (without column labels)
-        for (int i = 0; i < tagArray.size(); i++){
-            JSONObject ob = (JSONObject)tagArray.get(i);
-            String temptag = (String) ob.get("tag");
-            tags.add(temptag);
-        }
-
-        // for all tags in our list, check the category
-        for (int i = 0; i < tags.size(); i++){
-
-            curTag = tags.get(i);
-            PreparedStatement ps = conn.prepareStatement("SELECT DISTINCT category FROM app_feedback WHERE tag = ?");
-            ps.setString(1, curTag);
-
-            rs = ps.executeQuery();
-
-            while (rs.next()){
-                String curCat = rs.getString("category");
-                if (curCat.equals("feedback")){
-                    feed += 1;
-                } else if (curCat.equals("bugreport")){
-                    bugr += 1;
-                } else {
-                    sugg += 1;
-                }
+        while (rs.next()){
+            String curCat = rs.getString("category");
+            if (curCat.equals("feedback")){
+                feed += 1;
+            } else if (curCat.equals("bugreport")){
+                bugr += 1;
+            } else if (curCat.equals("suggestion")){
+                sugg += 1;
             }
-
-            close(rs);
         }
+        close(rs);
 
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("feedback", feed);
@@ -383,14 +350,34 @@ public class DB {
         return jsonArray;
     }
 
-    public JSONArray feedbacksPerYear() throws SQLException {
+    //2019
+    // Get time stamps of all feedbacks and divide them per month
+    public JSONArray feedbacksPerMonth(String request) throws SQLException {
         Statement stmt;
         Connection conn = DBConnection.connection();
         stmt = conn.createStatement();
-        ResultSet rs;
-        rs = stmt.executeQuery("SELECT * FROM app_feedback ORDER BY time ASC");
-        JSONArray jsonArray = printDB(rs);
+        int year = Integer.parseInt(request);
+        int year2 = year+1;
+
+        String query = "SELECT * FROM feedbacks.app_feedback WHERE time >= \'" + year + "-01-01' AND time < \'" + year2 + "-01-01\' GROUP BY tag ORDER BY time ASC;";
+
+
+        ResultSet rs = stmt.executeQuery(query);
+
+
+        JSONArray jsonArray = new JSONArray();
+
+        while (rs.next()){
+            JSONObject jso = new JSONObject();
+            jso.put("time", rs.getString("time"));
+            jsonArray.add(jso);
+        }
+
+        // Make an array for slot for each month
         int[] yearlyData = new int[12];
+
+        // Iterate through our time stamps and extract month information, adding the data
+        // to the corresponding month slot in the array
         for (Object o : jsonArray) {
             JSONObject json = (JSONObject) o;
             String time = (String) json.get("time");
@@ -400,8 +387,26 @@ public class DB {
                 case 1:
                     yearlyData[0] += 1;
                     break;
+                case 2:
+                    yearlyData[1] += 1;
+                    break;
+                case 3:
+                    yearlyData[2] += 1;
+                    break;
+                case 4:
+                    yearlyData[3] += 1;
+                    break;
                 case 5:
                     yearlyData[4] += 1;
+                    break;
+                case 6:
+                    yearlyData[5] += 1;
+                    break;
+                case 7:
+                    yearlyData[6] += 1;
+                    break;
+                case 8:
+                    yearlyData[7] += 1;
                     break;
                 case 9:
                     yearlyData[8] += 1;
@@ -411,6 +416,9 @@ public class DB {
                     break;
                 case 11:
                     yearlyData[10] += 1;
+                    break;
+                case 12:
+                    yearlyData[11] += 1;
                     break;
             }
         }
@@ -500,6 +508,22 @@ public class DB {
         return jsonArray;
     }
 
+    // Feedback with a specific Id
+    public JSONArray theTag(String request) throws SQLException {
+        Statement stmt;
+        Connection conn = DBConnection.connection();
+        stmt = conn.createStatement();
+
+        PreparedStatement ps = conn.prepareStatement("SELECT * FROM app_feedback  WHERE tag = ?");
+        ps.setString(1, request);
+        ResultSet rs = ps.executeQuery();
+
+        JSONArray jsonArray = printDB(rs);
+        close(rs);
+        close(stmt);
+        return jsonArray;
+    }
+
     // Sort by time
     public JSONArray time(String request) throws SQLException {
         Statement stmt;
@@ -535,7 +559,6 @@ public class DB {
     public JSONArray avgPerApp() throws SQLException {
         int sum = 0, max = 0, appCount = 0;
         double avg = 0;
-
         double sumD;
         double countD;
         ArrayList<String> apps = new ArrayList<String>();
@@ -584,8 +607,8 @@ public class DB {
             int newAvg = (int)(avg*100);
 
             JSONObject jsonOb = new JSONObject();
-            jsonOb.put("x", cur);
-            jsonOb.put("y", newAvg);
+            jsonOb.put("app", cur);
+            jsonOb.put("avg", newAvg);
             jsonArray.add(jsonOb);
             sum = 0;
         }
