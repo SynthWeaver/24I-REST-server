@@ -140,11 +140,18 @@ public class Mapping {
         return db.catDistr();
     }
 
-    // count of all smileys (ratings) separately
+    // count of all smileys separately
     @ResponseBody
     @GetMapping("/get/linecount/smiley")
     public JSONArray smileyLineCountAll() throws SQLException, Exception {
         return db.smileyCountAll();
+    }
+
+    // count of all ratings separately
+    @ResponseBody
+    @GetMapping("/get/linecount/rating")
+    public JSONArray ratingLineCountAll() throws SQLException, Exception {
+        return db.ratingCountAll();
     }
 
     // Feedbacks per year

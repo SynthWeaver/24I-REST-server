@@ -15,13 +15,16 @@ public class DB {
     // MAIN QUERIES
     //
 
-    // basic select all
+    // Basic select all
     public JSONArray getFeedback() throws SQLException {
         String query = "SELECT * FROM app_feedback";
         return this.getJaByQuery(query);
     }
 
-    // basic select all group by tag
+    // Tag is the unique identifier per person, as some feedbacks consist of multiple questions
+    // (and therefore multiple lines) and the primary key id is different for each line
+
+    // Basic select all but group by tag (= only 1 line per person)
     public JSONArray getAllGroupByTag() throws SQLException {
         Connection conn = DBConnection.connection();
         Statement stmt = conn.createStatement();
@@ -33,9 +36,7 @@ public class DB {
         return jsonArray;
     }
 
-
-
-    // select all apps from DB
+    // Select all apps from DB
     public JSONArray selectAllAps() throws SQLException {
         return this.getJaByQuery("SELECT * FROM apps");
     }
@@ -161,7 +162,7 @@ public class DB {
     // OTHER QUERIES
     //
 
-    // List of tags and their templates
+    // List of tags and what template they are using
     public JSONArray selectTagsWithTemplates() throws SQLException {
         Statement stmt;
         Connection conn = DBConnection.connection();
@@ -183,7 +184,7 @@ public class DB {
         return jsonArray;
     }
 
-    // select all different apps appearing in app_feedback
+    // Select all different apps appearing in table app_feedback (= apps that we have feedback from)
     public JSONArray allAppsWithFeedback() throws SQLException {
         Statement stmt;
         Connection conn = DBConnection.connection();
@@ -202,7 +203,7 @@ public class DB {
         return jsonArray;
     }
 
-    // select all apps that have questions
+    // List of apps that have questions
     public JSONArray selectAllAppsWithQuestions() throws SQLException {
         Statement stmt;
         Connection conn = DBConnection.connection();
@@ -221,11 +222,12 @@ public class DB {
         return jsonArray;
     }
 
-    // retrieves the app based on the passed id
+    // Get data of an app (id, logoURL, template, password) by app id
     public JSONArray selectAppFromId(Integer id) throws SQLException {
         return getJaByQuery(String.format("SELECT * FROM apps WHERE id = %s", id));
     }
 
+    // Get data of an app (id, logoURL, template, password) by app name
     public JSONObject getAppByName(String name) throws SQLException {
         String query = String.format("SELECT * FROM apps WHERE appName = '%s'", name);
         return this.getJoByQuery(query);
@@ -247,12 +249,13 @@ public class DB {
         return jsonArray;
     }
 
-    // feedbacks of specific app
+    // Feedback data of specific app, by app name
     public JSONArray getFbOfApp(String app) throws SQLException {
         String query = String.format("SELECT * FROM app_feedback WHERE app = '%s'", app);
         return this.getJaByQuery(query);
     }
 
+    // For login
     public JSONObject login(Map<String, String> json) throws Exception {
         String appName = json.get("name");
         String password = json.get("password");
@@ -311,7 +314,7 @@ public class DB {
         return jsonArray;
     }
 
-    // Amount of all smileys
+    // Amount of all smileys (Template1)
     public JSONArray smileyCountAll() throws SQLException {
 
         Statement stmt;
@@ -322,13 +325,40 @@ public class DB {
         JSONArray jsonArray = new JSONArray();
 
         for (int i = 1; i<=10; i++){
-            ps = conn.prepareStatement("SELECT COUNT(*) AS sc FROM app_feedback WHERE rating = ?");
+            ps = conn.prepareStatement("SELECT COUNT(*) AS sc FROM app_feedback WHERE rating = ? AND template = 'Template1'");
             ps.setInt(1, i);
             ResultSet rs = ps.executeQuery();
 
             while (rs.next()) {
                 JSONObject jsonObject = new JSONObject();
                 jsonObject.put("SmileyRange", rs.getInt("sc"));
+
+                jsonArray.add(jsonObject);
+            }
+            close(rs);
+        }
+        close(stmt);
+        return jsonArray;
+    }
+
+    // Amount of all ratings (Template2)
+    public JSONArray ratingCountAll() throws SQLException {
+
+        Statement stmt;
+        PreparedStatement ps;
+        Connection conn = DBConnection.connection();
+        stmt = conn.createStatement();
+
+        JSONArray jsonArray = new JSONArray();
+
+        for (int i = 1; i<=10; i++){
+            ps = conn.prepareStatement("SELECT COUNT(*) AS sc FROM app_feedback WHERE rating = ? AND template = 'Template2'");
+            ps.setInt(1, i);
+            ResultSet rs = ps.executeQuery();
+
+            while (rs.next()) {
+                JSONObject jsonObject = new JSONObject();
+                jsonObject.put("Rating", rs.getInt("sc"));
 
                 jsonArray.add(jsonObject);
             }
@@ -360,7 +390,7 @@ public class DB {
             jsonArray.add(jso);
         }
 
-        // Make an array for slot for each month
+        // Make an array with a slot for each month
         int[] yearlyData = new int[12];
 
         // Iterate through our time stamps and extract month information, adding the data
@@ -458,7 +488,7 @@ public class DB {
         return jsonArray;
     }
 
-    // Feedback with a specific Id
+    // Feedback with a specific feedback_id
     public JSONArray theId(String request) throws SQLException {
         Statement stmt;
         Connection conn = DBConnection.connection();
@@ -474,7 +504,7 @@ public class DB {
         return jsonArray;
     }
 
-    // Feedback with a specific Id
+    // Feedback with a specific tag
     public JSONArray theTag(String request) throws SQLException {
         Statement stmt;
         Connection conn = DBConnection.connection();
@@ -490,6 +520,7 @@ public class DB {
         return jsonArray;
     }
 
+    // Get only questions and their ratings for a specific tag
     public JSONArray questionsPerTag(String request) throws SQLException {
         JSONArray tempArray = theTag(request);
         JSONArray jsonArray = new JSONArray();
@@ -516,15 +547,17 @@ public class DB {
 
     }
 
+    // One JSONArray with all information for one tag, if there are questions, they're nested
     public JSONArray oneJsonPerTag(String request) throws SQLException {
+        // Get all data corresponding to a tag
+        // (if there are questions, the JSONArray has multiple objects
         JSONArray tempArray = theTag(request);
 
+        // Get data that's mutual to all different templates
         JSONObject jsonObject1 = (JSONObject) tempArray.get(0);
 
         String id = (jsonObject1.get("id") != null ? jsonObject1.get("id").toString() : "");
         String app = (jsonObject1.get("app") != null ? jsonObject1.get("app").toString() : "");
-        String features = (jsonObject1.get("feature") != null ? jsonObject1.get("feature").toString() : "");
-        String rating = (jsonObject1.get("rating") != null ? jsonObject1.get("rating").toString() : "");
         String feedback = (jsonObject1.get("feedback") != null ? jsonObject1.get("feedback").toString() : "");
         String category = (jsonObject1.get("category") != null ? jsonObject1.get("category").toString() : "");
         String time = jsonObject1.get("time").toString();
@@ -548,8 +581,8 @@ public class DB {
         JSONArray jsonArray = new JSONArray();
 
 
-        // if size is bigger than one, it's going to have questions so
-        // we want those in the JSONObject
+        // if size is bigger than one, it's going to have starQuestions and stars
+        // and we want those in the JSONObject childData
         if (tempArray.size() > 1) {
 
             ArrayList<String> questions = new ArrayList<String>();
@@ -579,6 +612,9 @@ public class DB {
             // Since the size is not greater than 1, it's template 1 or 2
             // so we want rating and features instead of questions
 
+            String features = (jsonObject1.get("feature") != null ? jsonObject1.get("feature").toString() : "");
+            String rating = (jsonObject1.get("rating") != null ? jsonObject1.get("rating").toString() : "");
+
             parentData.put("rating", rating);
             parentData.put("features", features);
             jsonArray.add(parentData);
@@ -587,7 +623,7 @@ public class DB {
         }
     }
 
-    // Sort by time
+    // Sort by time (request in the path either asc or desc)
     public JSONArray time(String request) throws SQLException {
         Statement stmt;
         Connection conn = DBConnection.connection();
@@ -606,7 +642,7 @@ public class DB {
         return jsonArray;
     }
 
-    // Delete a feedback
+    // Delete a feedback by tag
     public Integer deleteFeedback(String request) throws SQLException {
         Statement stmt;
         Connection conn = DBConnection.connection();
@@ -618,7 +654,7 @@ public class DB {
         return result;
     }
 
-    // average grade per app
+    // Average smiley per app
     public JSONArray avgPerApp() throws SQLException {
         int sum = 0, max = 0, appCount = 0;
         double avg = 0;
@@ -635,7 +671,7 @@ public class DB {
         stmt = conn.createStatement();
 
         // See how many different apps and put them in an array list
-        ResultSet rs = stmt.executeQuery("SELECT DISTINCT app FROM app_feedback WHERE rating IS NOT NULL AND rating <> \"\" AND rating <> \" \" ORDER BY app");
+        ResultSet rs = stmt.executeQuery("SELECT DISTINCT app FROM app_feedback WHERE rating IS NOT NULL AND rating <> \"\" AND rating <> \" \" AND template = 'Template1' ORDER BY app");
 
         while (rs.next()) {
 
@@ -646,7 +682,7 @@ public class DB {
         // For every app in the array list, check the smileys, add them to variable sum
         for (int i = 0; i < max; i++){
             cur = apps.get(i);
-            PreparedStatement ps = conn.prepareStatement("SELECT rating AS num FROM app_feedback WHERE app = ? AND rating IS NOT NULL AND rating <> \"\" AND rating <> \" \"");
+            PreparedStatement ps = conn.prepareStatement("SELECT rating AS num FROM app_feedback WHERE app = ? AND rating IS NOT NULL AND rating <> \"\" AND rating <> \" \" AND template = 'Template1'");
             ps.setString(1, cur);
             rs = ps.executeQuery();
 
@@ -655,7 +691,7 @@ public class DB {
             }
 
             // Get line count for this app
-            ps = conn.prepareStatement("SELECT COUNT(*) AS cn FROM app_feedback WHERE app = ? AND rating IS NOT NULL AND rating <> \"\"");
+            ps = conn.prepareStatement("SELECT COUNT(*) AS cn FROM app_feedback WHERE app = ? AND rating IS NOT NULL AND rating <> \"\" AND template = 'Template1'");
             ps.setString(1, cur);
             rs = ps.executeQuery();
 
