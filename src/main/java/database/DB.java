@@ -654,7 +654,7 @@ public class DB {
         return result;
     }
 
-    // Average smiley per app
+    // Average smiley/rating per app
     public JSONArray avgPerApp() throws SQLException {
         int sum = 0, max = 0, appCount = 0;
         double avg = 0;
@@ -671,7 +671,7 @@ public class DB {
         stmt = conn.createStatement();
 
         // See how many different apps and put them in an array list
-        ResultSet rs = stmt.executeQuery("SELECT DISTINCT app FROM app_feedback WHERE rating IS NOT NULL AND rating <> \"\" AND rating <> \" \" AND template = 'Template1' ORDER BY app");
+        ResultSet rs = stmt.executeQuery("SELECT DISTINCT app FROM app_feedback WHERE rating IS NOT NULL AND rating <> \"\" AND rating <> \" \" ORDER BY app");
 
         while (rs.next()) {
 
@@ -682,7 +682,7 @@ public class DB {
         // For every app in the array list, check the smileys, add them to variable sum
         for (int i = 0; i < max; i++){
             cur = apps.get(i);
-            PreparedStatement ps = conn.prepareStatement("SELECT rating AS num FROM app_feedback WHERE app = ? AND rating IS NOT NULL AND rating <> \"\" AND rating <> \" \" AND template = 'Template1'");
+            PreparedStatement ps = conn.prepareStatement("SELECT rating AS num FROM app_feedback WHERE app = ? AND rating IS NOT NULL AND rating <> \"\" AND rating <> \" \"");
             ps.setString(1, cur);
             rs = ps.executeQuery();
 
@@ -691,7 +691,7 @@ public class DB {
             }
 
             // Get line count for this app
-            ps = conn.prepareStatement("SELECT COUNT(*) AS cn FROM app_feedback WHERE app = ? AND rating IS NOT NULL AND rating <> \"\" AND template = 'Template1'");
+            ps = conn.prepareStatement("SELECT COUNT(*) AS cn FROM app_feedback WHERE app = ? AND rating IS NOT NULL AND rating <> \"\"");
             ps.setString(1, cur);
             rs = ps.executeQuery();
 
