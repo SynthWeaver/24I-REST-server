@@ -29,9 +29,9 @@ public class DB {
         Connection conn = DBConnection.connection();
         Statement stmt = conn.createStatement();
 
-        ResultSet rs = stmt.executeQuery("SELECT * FROM feedbacks.app_feedback GROUP BY tag;");
+        ResultSet rs = stmt.executeQuery("SELECT tag, ANY_VALUE(feedback_id), ANY_VALUE(app), ANY_VALUE(features), ANY_VALUE(rating), ANY_VALUE(stars), ANY_VALUE(star_question), ANY_VALUE(image), ANY_VALUE(category), ANY_VALUE(feedback), ANY_VALUE(time), ANY_VALUE(device), ANY_VALUE(os), ANY_VALUE(template) FROM feedbacks.app_feedback GROUP BY tag;");
 
-        JSONArray jsonArray = printDB(rs);
+        JSONArray jsonArray = printDBAny(rs);
 
         return jsonArray;
     }
@@ -168,14 +168,14 @@ public class DB {
         Connection conn = DBConnection.connection();
         stmt = conn.createStatement();
 
-        ResultSet rs = stmt.executeQuery("SELECT tag, template FROM app_feedback GROUP BY tag;");
+        ResultSet rs = stmt.executeQuery("SELECT tag, ANY_VALUE(template) FROM app_feedback GROUP BY tag;");
 
         JSONArray jsonArray = new JSONArray();
 
         while (rs.next()){
             JSONObject jsonObject = new JSONObject();
             jsonObject.put("tag", rs.getString("tag"));
-            jsonObject.put("template", rs.getString("template"));
+            jsonObject.put("template", rs.getString("ANY_VALUE(template)"));
 
             jsonArray.add(jsonObject);
         }
@@ -289,10 +289,10 @@ public class DB {
         stmt = conn.createStatement();
         int feed = 0, bugr = 0, sugg = 0;
 
-        ResultSet rs = stmt.executeQuery("SELECT category FROM feedbacks.app_feedback GROUP BY tag;");
+        ResultSet rs = stmt.executeQuery("SELECT ANY_VALUE(category) FROM feedbacks.app_feedback GROUP BY tag;");
 
         while (rs.next()){
-            String curCat = rs.getString("category");
+            String curCat = rs.getString("ANY_VALUE(category)");
             if (curCat.equals("feedback")){
                 feed += 1;
             } else if (curCat.equals("bugreport")){
@@ -376,7 +376,7 @@ public class DB {
         int year = Integer.parseInt(request);
         int year2 = year+1;
 
-        String query = "SELECT * FROM feedbacks.app_feedback WHERE time >= \'" + year + "-01-01' AND time < \'" + year2 + "-01-01\' GROUP BY tag ORDER BY time ASC;";
+        String query = "SELECT ANY_VALUE(time) FROM feedbacks.app_feedback WHERE ANY_VALUE(time) >= \'" + year + "-01-01\' AND ANY_VALUE(time) < \'" + year2 + "-01-01\' GROUP BY tag ORDER BY ANY_VALUE(time) ASC;";
 
 
         ResultSet rs = stmt.executeQuery(query);
@@ -386,7 +386,7 @@ public class DB {
 
         while (rs.next()){
             JSONObject jso = new JSONObject();
-            jso.put("time", rs.getString("time"));
+            jso.put("time", rs.getString("ANY_VALUE(time)"));
             jsonArray.add(jso);
         }
 
@@ -458,8 +458,8 @@ public class DB {
         stmt = conn.createStatement();
         int os1count = 0, os2count = 0;
 
-        PreparedStatement ps = conn.prepareStatement("SELECT os FROM app_feedback WHERE os = ? GROUP BY tag;");
-        PreparedStatement ps2 = conn.prepareStatement("SELECT os FROM app_feedback WHERE os = ? GROUP BY tag;");
+        PreparedStatement ps = conn.prepareStatement("SELECT ANY_VALUE(os) FROM app_feedback WHERE ANY_VALUE(os) = ? GROUP BY tag;");
+        PreparedStatement ps2 = conn.prepareStatement("SELECT ANY_VALUE(os) FROM app_feedback WHERE ANY_VALUE(os) = ? GROUP BY tag;");
         ps.setString(1, os1);
         ps2.setString(1, os2);
 
@@ -885,6 +885,35 @@ public class DB {
         return jsonArray;
     }
 
+
+    // for putting JSONObjects into the JSONArray when all columns are needed
+    private JSONArray printDBAny(ResultSet rs) throws SQLException{
+        JSONArray jsonArray = new JSONArray();
+
+        while (rs.next()) {
+            JSONObject jsonObject = new JSONObject();
+
+            jsonObject.put("id", rs.getInt("ANY_VALUE(feedback_id)"));
+            jsonObject.put("feedback", rs.getString("ANY_VALUE(feedback)"));
+            jsonObject.put("category", rs.getString("ANY_VALUE(category)"));
+            jsonObject.put("time", rs.getString("ANY_VALUE(time)"));
+            jsonObject.put("device", rs.getString("ANY_VALUE(device)"));
+            jsonObject.put("os", rs.getString("ANY_VALUE(os)"));
+            jsonObject.put("app", rs.getString("ANY_VALUE(app)"));
+            jsonObject.put("image", rs.getString("ANY_VALUE(image)"));
+            jsonObject.put("features", rs.getString("ANY_VALUE(features)"));
+            jsonObject.put("stars", rs.getString("ANY_VALUE(stars)"));
+            jsonObject.put("rating", rs.getString("ANY_VALUE(rating)"));
+            jsonObject.put("starQuestion", rs.getString("ANY_VALUE(star_question)"));
+
+            jsonObject.put("tag", rs.getString("tag"));
+            jsonObject.put("template", rs.getString("ANY_VALUE(template)"));
+
+            jsonArray.add(jsonObject);
+        }
+        return jsonArray;
+    }
+
     private JSONArray printTemplateDB(ResultSet rs) throws SQLException {
         JSONArray jsonArray = new JSONArray();
         while(rs.next()) {
@@ -997,7 +1026,7 @@ public class DB {
         return jsonArray;
     }
 
-    // basic select all group by tag
+    // basic select all for templates one and two
     public JSONArray getOneLineFbs() throws SQLException {
         Connection conn = DBConnection.connection();
         Statement stmt = conn.createStatement();
