@@ -221,6 +221,13 @@ public class Mapping {
         return db.avgPerApp();
     }
 
+    // Smiley averages per app
+    @ResponseBody
+    @GetMapping("/getAvgPerApp2")
+    public JSONArray getAvgPerApp2() throws SQLException {
+        return db.avgPerApp2();
+    }
+
     // Rating averages per app
     @ResponseBody
     @GetMapping("/getAvgRatingPerQuestPerApp/{app}")

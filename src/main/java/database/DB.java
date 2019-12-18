@@ -29,12 +29,13 @@ public class DB {
         Connection conn = DBConnection.connection();
         Statement stmt = conn.createStatement();
 
-        ResultSet rs = stmt.executeQuery("SELECT tag, ANY_VALUE(feedback_id), ANY_VALUE(app), ANY_VALUE(features), ANY_VALUE(rating), ANY_VALUE(stars), ANY_VALUE(star_question), ANY_VALUE(image), ANY_VALUE(category), ANY_VALUE(feedback), ANY_VALUE(time), ANY_VALUE(device), ANY_VALUE(os), ANY_VALUE(template) FROM feedbacks.app_feedback GROUP BY tag;");
+        ResultSet rs = stmt.executeQuery("SELECT tag, ANY_VALUE(feedback_id), ANY_VALUE(app), ANY_VALUE(features), ANY_VALUE(rating), ANY_VALUE(stars), ANY_VALUE(star_question), ANY_VALUE(image), ANY_VALUE(category), ANY_VALUE(feedback), ANY_VALUE(time), ANY_VALUE(device), ANY_VALUE(os), ANY_VALUE(template) FROM feedbacks.app_feedback GROUP BY tag ORDER BY ANY_VALUE(time) DESC;");
 
         JSONArray jsonArray = printDBAny(rs);
 
         return jsonArray;
     }
+
 
     // Select all apps from DB
     public JSONArray selectAllAps() throws SQLException {
@@ -251,8 +252,16 @@ public class DB {
 
     // Feedback data of specific app, by app name
     public JSONArray getFbOfApp(String app) throws SQLException {
-        String query = String.format("SELECT * FROM app_feedback WHERE app = '%s'", app);
-        return this.getJaByQuery(query);
+        PreparedStatement ps;
+        Connection conn = DBConnection.connection();
+
+        ps = conn.prepareStatement("SELECT tag, ANY_VALUE(feedback_id), ANY_VALUE(app), ANY_VALUE(features), ANY_VALUE(rating), ANY_VALUE(stars), ANY_VALUE(star_question), ANY_VALUE(image), ANY_VALUE(category), ANY_VALUE(feedback), ANY_VALUE(time), ANY_VALUE(device), ANY_VALUE(os), ANY_VALUE(template) FROM feedbacks.app_feedback WHERE app = ? GROUP BY tag;");
+        ps.setString(1, app);
+
+        ResultSet rs = ps.executeQuery();
+        JSONArray jsonArray = printDBAny(rs);
+
+        return jsonArray;
     }
 
     // For login
@@ -715,6 +724,72 @@ public class DB {
         close(stmt);
         return jsonArray;
     }
+
+
+    // Average smiley/rating per app
+    public JSONArray avgPerApp2() throws SQLException {
+        int sum = 0, max = 0, appCount = 0;
+        double avg = 0;
+        double sumD;
+        double countD;
+        ArrayList<String> apps = new ArrayList<String>();
+        String cur;
+
+
+        JSONArray jsonArray = new JSONArray();
+        JSONObject jsonOb = new JSONObject();
+
+
+        Statement stmt;
+        Connection conn = DBConnection.connection();
+        stmt = conn.createStatement();
+
+        // See how many different apps and put them in an array list
+        ResultSet rs = stmt.executeQuery("SELECT DISTINCT app FROM app_feedback WHERE rating IS NOT NULL AND rating <> \"\" AND rating <> \" \" ORDER BY app");
+
+        while (rs.next()) {
+
+            apps.add(rs.getString("app"));
+            max++;
+        }
+
+        // For every app in the array list, check the smileys, add them to variable sum
+        for (int i = 0; i < max; i++){
+            cur = apps.get(i);
+            PreparedStatement ps = conn.prepareStatement("SELECT rating AS num FROM app_feedback WHERE app = ? AND rating IS NOT NULL AND rating <> \"\" AND rating <> \" \"");
+            ps.setString(1, cur);
+            rs = ps.executeQuery();
+
+            while (rs.next()) {
+                sum += (rs.getInt("num"));
+            }
+
+            // Get line count for this app
+            ps = conn.prepareStatement("SELECT COUNT(*) AS cn FROM app_feedback WHERE app = ? AND rating IS NOT NULL AND rating <> \"\"");
+            ps.setString(1, cur);
+            rs = ps.executeQuery();
+
+            while (rs.next()) {
+                appCount = (rs.getInt("cn"));
+            }
+
+            //calculate average, convert into integer between 1-100 for the react native chart
+            sumD = sum;
+            countD = appCount;
+            avg = sumD/countD;
+            int newAvg = (int)(avg*100);
+
+            jsonOb.put(cur, newAvg);
+            sum = 0;
+        }
+        jsonArray.add(jsonOb);
+
+        close(rs);
+        close(stmt);
+        return jsonArray;
+    }
+
+
 
     // average stars per question per app
     public JSONArray avgStarPerQuesPerApp(String request) throws SQLException {
