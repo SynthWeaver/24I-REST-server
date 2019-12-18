@@ -773,11 +773,11 @@ public class DB {
             avg = sumD/countD;
 
             // for formatting average
-            DecimalFormat df2 = new DecimalFormat("#.00");
+            DecimalFormat df = new DecimalFormat("#.0");
 
             JSONObject jsonOb = new JSONObject();
             jsonOb.put("question", cur);
-            jsonOb.put("avg", df2.format(avg));
+            jsonOb.put("avg", df.format(avg));
             jsonArray.add(jsonOb);
             starsum = 0;
         }

@@ -210,7 +210,7 @@ public class Mapping {
     // DELETE FEEDBACK BY tag
     @ResponseBody
     @GetMapping("/areyousure/delete/{tag}")
-    public int deleteFeedback(@PathVariable("id") String tag) throws SQLException {
+    public int deleteFeedback(@PathVariable("tag") String tag) throws SQLException {
         return db.deleteFeedback(tag);
     }
 
