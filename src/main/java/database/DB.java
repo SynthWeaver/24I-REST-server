@@ -255,7 +255,7 @@ public class DB {
         PreparedStatement ps;
         Connection conn = DBConnection.connection();
 
-        ps = conn.prepareStatement("SELECT tag, ANY_VALUE(feedback_id), ANY_VALUE(app), ANY_VALUE(features), ANY_VALUE(rating), ANY_VALUE(stars), ANY_VALUE(star_question), ANY_VALUE(image), ANY_VALUE(category), ANY_VALUE(feedback), ANY_VALUE(time), ANY_VALUE(device), ANY_VALUE(os), ANY_VALUE(template) FROM feedbacks.app_feedback WHERE app = ? GROUP BY tag;");
+        ps = conn.prepareStatement("SELECT tag, ANY_VALUE(feedback_id), ANY_VALUE(app), ANY_VALUE(features), ANY_VALUE(rating), ANY_VALUE(stars), ANY_VALUE(star_question), ANY_VALUE(image), ANY_VALUE(category), ANY_VALUE(feedback), ANY_VALUE(time), ANY_VALUE(device), ANY_VALUE(os), ANY_VALUE(template) FROM feedbacks.app_feedback WHERE app = ? GROUP BY tag ORDER BY ANY_VALUE(time) DESC;");
         ps.setString(1, app);
 
         ResultSet rs = ps.executeQuery();
