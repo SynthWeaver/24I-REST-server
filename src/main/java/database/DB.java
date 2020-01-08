@@ -113,14 +113,14 @@ public class DB {
         String appName = jsonObject.get("appName").toString();
         String logoURL = jsonObject.get("logoURL").toString();
         String template = jsonObject.get("template").toString();
-        String password = jsonObject.get("password").toString();
+        //String password = jsonObject.get("password").toString();
         String featureConfig = jsonObject.get("featureConfig").toString();
         String starQuestion = jsonObject.get("starQuestion").toString();
 
         if(     appName.isEmpty() ||
                 logoURL.isEmpty() ||
-                template.isEmpty() ||
-                password.isEmpty()
+                template.isEmpty()
+                //password.isEmpty()
             //featureConfig.isEmpty() ||
             //starQuestion.isEmpty()
         ){
@@ -128,20 +128,20 @@ public class DB {
             return;
         }
 
-        String hashedPassword = null;
+/*        String hashedPassword = null;
         try {
             hashedPassword = Password.getSaltedHash(password);
         } catch (Exception e) {
             close(stmt);
             e.printStackTrace();
-        }
+        }*/
 
         String appTableQuery = String.format("INSERT IGNORE INTO feedbacks.apps" +
 
-                        "(appName,logoURL,template,password)" +
+                        "(appName,logoURL,template)" +
                         "VALUES" +
-                        "('%s','%s','%s','%s');",
-                appName, logoURL, template, hashedPassword
+                        "('%s','%s','%s');",
+                appName, logoURL, template
         );
 
         stmt.executeUpdate(appTableQuery);
